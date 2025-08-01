@@ -5,7 +5,7 @@ const path = require('path')
 
 class NetworkController {
   /**
-   * Импорт данных из директории data
+   * Import data from data directory
    */
   static async importData(request, reply) {
     try {
@@ -30,7 +30,7 @@ class NetworkController {
   }
 
   /**
-   * Получение списка всех устройств
+   * Get list of all devices
    */
   static async getDevices(request, reply) {
     try {
@@ -48,7 +48,7 @@ class NetworkController {
   }
 
   /**
-   * Получение информации об устройстве с портами и VLAN
+   * Get device information with ports and VLANs
    */
   static async getDevice(request, reply) {
     try {
@@ -75,7 +75,7 @@ class NetworkController {
   }
 
   /**
-   * Получение списка всех VLAN
+   * Get list of all VLANs
    */
   static async getVlans(request, reply) {
     try {
@@ -93,7 +93,7 @@ class NetworkController {
   }
 
   /**
-   * Получение топологии VLAN
+   * Get VLAN topology
    */
   static async getVlanTopology(request, reply) {
     try {
@@ -113,7 +113,7 @@ class NetworkController {
   }
 
   /**
-   * Получение MAC адресов в VLAN
+   * Get MAC addresses in VLAN
    */
   static async getVlanMacs(request, reply) {
     try {
@@ -133,7 +133,7 @@ class NetworkController {
   }
 
   /**
-   * Генерация HTML схемы для VLAN
+   * Generate HTML scheme for VLAN
    */
   static async generateVlanScheme(request, reply) {
     try {
@@ -141,7 +141,7 @@ class NetworkController {
       const topology = await VlanModel.findVlanPath(parseInt(vlanId))
       const macAddresses = await VlanModel.getMacAddresses(parseInt(vlanId))
       
-      // Генерируем HTML
+      // Generate HTML
       const html = this.generateVlanHTML(topology, macAddresses)
       
       reply.type('text/html').send(html)
@@ -154,7 +154,7 @@ class NetworkController {
   }
 
   /**
-   * Генерация HTML схемы VLAN
+   * Generate VLAN HTML scheme
    */
   static generateVlanHTML(topology, macAddresses) {
     const macByDevice = {}

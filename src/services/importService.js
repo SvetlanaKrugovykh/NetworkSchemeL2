@@ -61,16 +61,16 @@ class ImportService {
           })
         }
         
-        // Сохраняем конфигурацию
+        // Save configuration
         await this.saveDeviceConfiguration(device.id, configText, 'imported')
         
-        // Создаем порты
+        // Create ports
         await this.importPorts(device.id, parsedData.ports, client)
         
-        // Создаем VLAN
+        // Create VLANs
         await this.importVlans(parsedData.vlans, client)
         
-        // Создаем связи устройство-VLAN
+        // Create device-VLAN relationships
         await this.importDeviceVlans(device.id, parsedData.deviceVlans, client)
         
         await client.query('COMMIT')
@@ -92,7 +92,7 @@ class ImportService {
   }
 
   /**
-   * Импорт MAC таблицы устройства
+   * Import device MAC table
    */
   static async importMacTable(filePath) {
     try {
@@ -100,15 +100,15 @@ class ImportService {
       
       const macTableText = await fs.readFile(filePath, 'utf8')
       const fileName = path.basename(filePath)
-      const deviceIp = fileName // предполагаем, что имя файла = IP устройства
+      const deviceIp = fileName // assume filename = device IP
       
-      // Находим устройство в базе данных
+      // Find device in database
       const device = await DeviceModel.findByIp(deviceIp)
       if (!device) {
         throw new Error(`Device with IP ${deviceIp} not found in database`)
       }
       
-      // Парсим MAC таблицу
+      // Parse MAC table
       const macEntries = MacTableParser.parseAuto(macTableText, deviceIp)
       
       // Получаем порты устройства для сопоставления

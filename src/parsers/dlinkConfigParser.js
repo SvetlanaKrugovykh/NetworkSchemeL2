@@ -228,7 +228,7 @@ class DLinkConfigParser {
   }
 
   /**
-   * Парсинг диапазона портов (например, "1-4,6,8-10")
+   * Parse port range (e.g., "1-4,6,8-10")
    */
   parsePortRange(rangeStr) {
     const ports = []

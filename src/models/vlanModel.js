@@ -36,7 +36,7 @@ class VlanModel {
   }
 
   /**
-   * Получение всех VLAN
+   * Get all VLANs
    */
   static async findAll() {
     const query = 'SELECT * FROM vlans ORDER BY vlan_id'
@@ -45,7 +45,7 @@ class VlanModel {
   }
 
   /**
-   * Добавление VLAN к устройству/порту
+   * Add VLAN to device/port
    */
   static async addToDevice(deviceVlanData) {
     const {
@@ -78,7 +78,7 @@ class VlanModel {
   }
 
   /**
-   * Получение топологии VLAN (какие устройства и порты участвуют в VLAN)
+   * Get VLAN topology (which devices and ports participate in VLAN)
    */
   static async getTopology(vlanId) {
     const query = `
@@ -111,12 +111,12 @@ class VlanModel {
   }
 
   /**
-   * Поиск пути VLAN через устройства
+   * Find VLAN path through devices
    */
   static async findVlanPath(vlanId) {
     const topology = await this.getTopology(vlanId)
     
-    // Группируем по устройствам
+    // Group by devices
     const deviceMap = {}
     topology.forEach(item => {
       if (!deviceMap[item.device_id]) {
@@ -151,7 +151,7 @@ class VlanModel {
   }
 
   /**
-   * Получение MAC адресов в VLAN
+   * Get MAC addresses in VLAN
    */
   static async getMacAddresses(vlanId) {
     const query = `
@@ -173,7 +173,7 @@ class VlanModel {
   }
 
   /**
-   * Удаление VLAN
+   * Delete VLAN
    */
   static async delete(vlanId) {
     const query = 'DELETE FROM vlans WHERE vlan_id = $1 RETURNING *'

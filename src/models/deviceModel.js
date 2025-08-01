@@ -37,7 +37,7 @@ class DeviceModel {
   }
 
   /**
-   * Получение всех устройств
+   * Get all devices
    */
   static async findAll() {
     const query = 'SELECT * FROM devices ORDER BY ip_address'
@@ -46,7 +46,7 @@ class DeviceModel {
   }
 
   /**
-   * Обновление устройства
+   * Update device
    */
   static async update(id, updateData) {
     const fields = []
@@ -80,7 +80,7 @@ class DeviceModel {
   }
 
   /**
-   * Удаление устройства
+   * Delete device
    */
   static async delete(id) {
     const query = 'DELETE FROM devices WHERE id = $1 RETURNING *'
@@ -89,7 +89,7 @@ class DeviceModel {
   }
 
   /**
-   * Получение устройства с портами
+   * Get device with ports
    */
   static async findWithPorts(id) {
     const deviceQuery = 'SELECT * FROM devices WHERE id = $1'
@@ -113,7 +113,7 @@ class DeviceModel {
   }
 
   /**
-   * Получение устройства с VLAN конфигурацией
+   * Get device with VLAN configuration
    */
   static async findWithVlans(id) {
     const device = await this.findWithPorts(id)
