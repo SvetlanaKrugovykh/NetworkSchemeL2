@@ -48,6 +48,14 @@
             padding: 30px;
         }
         
+        .topology-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #f9fafb;
+        }
+        
         .section {
             margin-bottom: 40px;
         }
@@ -202,11 +210,11 @@
         <div class="content">
             <!-- Statistics -->
             <div class="section">
-                <h2>📊 Статистика</h2>
+                <h2>📊 Statistics</h2>
                 <div class="stats" id="stats">
                     <div class="stat-item">
                         <div class="stat-number" id="deviceCount">-</div>
-                        <div class="stat-label">Устройства</div>
+                        <div class="stat-label">Devices</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" id="vlanCount">-</div>
@@ -418,7 +426,7 @@
             }
             
             if (!vlanId) {
-                alert('Введите VLAN ID');
+                alert('Enter VLAN ID');
                 return;
             }
             
@@ -428,15 +436,319 @@
                 
                 if (result.success) {
                     const resultsDiv = document.getElementById('results');
-                    resultsDiv.innerHTML = `
-                        <h3>🔗 Топология VLAN ${vlanId}</h3>
-                        <div class="log">${JSON.stringify(result.data, null, 2)}</div>
-                    `;
+                    resultsDiv.innerHTML = `<h3>🔗 Network Topology VLAN ${vlanId}</h3>`;
+                    
+                    // Create topology visualization container
+                    const topologyContainer = document.createElement('div');
+                    topologyContainer.id = 'topology-visualization';
+                    topologyContainer.className = 'topology-container';
+                    resultsDiv.appendChild(topologyContainer);
+                    
+                    // Visualize topology
+                    visualizeNetworkTopology([result.data]);
                 } else {
-                    alert('Ошибка: ' + result.error);
+                    alert('Error: ' + result.error);
                 }
             } catch (error) {
-                alert('Ошибка: ' + error.message);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Network Topology Visualization with Source/Transit Detection
+        function visualizeNetworkTopology(data) {
+            const container = document.getElementById('topology-visualization')
+            container.innerHTML = ''
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No topology data available</p>'
+                return
+            }
+            
+            // Create main topology container
+            const topologyDiv = document.createElement('div')
+            topologyDiv.style.display = 'flex'
+            topologyDiv.style.flexDirection = 'column'
+            topologyDiv.style.gap = '20px'
+            
+            data.forEach(item => {
+                const vlanSection = document.createElement('div')
+                vlanSection.style.border = '1px solid #ddd'
+                vlanSection.style.borderRadius = '8px'
+                vlanSection.style.padding = '15px'
+                vlanSection.style.backgroundColor = '#f9f9f9'
+                
+                // VLAN Header
+                const vlanHeader = document.createElement('h3')
+                vlanHeader.style.margin = '0 0 15px 0'
+                vlanHeader.style.color = '#2563eb'
+                vlanHeader.textContent = item.vlan_name || ('VLAN ' + item.vlan_id)
+                vlanSection.appendChild(vlanHeader)
+                
+                // Device grid
+                if (item.devices && item.devices.length > 0) {
+                    const deviceGrid = document.createElement('div')
+                    deviceGrid.style.display = 'grid'
+                    deviceGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))'
+                    deviceGrid.style.gap = '15px'
+                    
+                    item.devices.forEach(device => {
+                        const deviceCard = createDeviceCard(device)
+                        deviceGrid.appendChild(deviceCard)
+                    })
+                    
+                    vlanSection.appendChild(deviceGrid)
+                }
+                
+                topologyDiv.appendChild(vlanSection)
+            })
+            
+            container.appendChild(topologyDiv)
+        }
+        
+        // Create device card with ports and MAC addresses
+        function createDeviceCard(device) {
+            const card = document.createElement('div')
+            card.style.backgroundColor = 'white'
+            card.style.border = '1px solid #ddd'
+            card.style.borderRadius = '8px'
+            card.style.padding = '15px'
+            card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'
+            
+            // Device header
+            const header = document.createElement('div')
+            header.style.display = 'flex'
+            header.style.alignItems = 'center'
+            header.style.marginBottom = '15px'
+            
+            const deviceIcon = document.createElement('div')
+            deviceIcon.style.width = '32px'
+            deviceIcon.style.height = '32px'
+            deviceIcon.style.backgroundColor = '#dbeafe'
+            deviceIcon.style.borderRadius = '50%'
+            deviceIcon.style.display = 'flex'
+            deviceIcon.style.alignItems = 'center'
+            deviceIcon.style.justifyContent = 'center'
+            deviceIcon.style.marginRight = '12px'
+            deviceIcon.innerHTML = '🖥️'
+            
+            const deviceInfo = document.createElement('div')
+            deviceInfo.innerHTML = `
+                <div style="font-weight: 600; color: #1f2937;">${device.hostname || 'Unknown Device'}</div>
+                <div style="font-size: 14px; color: #6b7280;">${device.ip_address}</div>
+            `
+            
+            header.appendChild(deviceIcon)
+            header.appendChild(deviceInfo)
+            card.appendChild(header)
+            
+            // Ports section
+            if (device.ports && device.ports.length > 0) {
+                const portsSection = document.createElement('div')
+                portsSection.style.display = 'flex'
+                portsSection.style.flexDirection = 'column'
+                portsSection.style.gap = '8px'
+                
+                device.ports.forEach(port => {
+                    const portCard = createPortCard(port)
+                    portsSection.appendChild(portCard)
+                })
+                
+                card.appendChild(portsSection)
+            }
+            
+            return card
+        }
+        
+        // Create port card with MAC addresses and topology info
+        function createPortCard(port) {
+            const portDiv = document.createElement('div')
+            portDiv.style.border = '1px solid #e5e7eb'
+            portDiv.style.borderRadius = '6px'
+            portDiv.style.padding = '12px'
+            portDiv.style.backgroundColor = '#f9fafb'
+            
+            // Port header
+            const portHeader = document.createElement('div')
+            portHeader.style.display = 'flex'
+            portHeader.style.justifyContent = 'space-between'
+            portHeader.style.alignItems = 'center'
+            portHeader.style.marginBottom = '8px'
+            
+            const portInfo = document.createElement('div')
+            portInfo.style.fontWeight = '500'
+            portInfo.style.fontSize = '14px'
+            portInfo.textContent = `Port ${port.port_number}`
+            
+            const portMode = document.createElement('span')
+            portMode.style.padding = '2px 8px'
+            portMode.style.borderRadius = '4px'
+            portMode.style.fontSize = '12px'
+            const modeColor = getModeColor(port.mode)
+            portMode.style.backgroundColor = modeColor.bg
+            portMode.style.color = modeColor.text
+            portMode.textContent = port.mode || 'unknown'
+            
+            portHeader.appendChild(portInfo)
+            portHeader.appendChild(portMode)
+            portDiv.appendChild(portHeader)
+            
+            // Port description
+            if (port.port_description) {
+                const description = document.createElement('div')
+                description.style.fontSize = '12px'
+                description.style.color = '#6b7280'
+                description.style.marginBottom = '8px'
+                description.textContent = port.port_description
+                portDiv.appendChild(description)
+            }
+            
+            // MAC addresses with topology indicators
+            if (port.mac_addresses && port.mac_addresses.length > 0) {
+                const macSection = document.createElement('div')
+                macSection.style.display = 'flex'
+                macSection.style.flexDirection = 'column'
+                macSection.style.gap = '4px'
+                
+                // Group MACs by source/transit
+                const sourceMacs = port.mac_addresses.filter(mac => mac.is_source)
+                const transitMacs = port.mac_addresses.filter(mac => mac.is_source === false)
+                const unknownMacs = port.mac_addresses.filter(mac => mac.is_source === null)
+                
+                // Source MACs
+                if (sourceMacs.length > 0) {
+                    const sourceHeader = document.createElement('div')
+                    sourceHeader.style.fontSize = '12px'
+                    sourceHeader.style.fontWeight = '500'
+                    sourceHeader.style.color = '#059669'
+                    sourceHeader.style.marginTop = '8px'
+                    sourceHeader.textContent = `Source Devices (${sourceMacs.length})`
+                    macSection.appendChild(sourceHeader)
+                    
+                    sourceMacs.forEach(mac => {
+                        const macDiv = createMacAddressDiv(mac, 'source')
+                        macSection.appendChild(macDiv)
+                    })
+                }
+                
+                // Transit MACs
+                if (transitMacs.length > 0) {
+                    const transitHeader = document.createElement('div')
+                    transitHeader.style.fontSize = '12px'
+                    transitHeader.style.fontWeight = '500'
+                    transitHeader.style.color = '#d97706'
+                    transitHeader.style.marginTop = '8px'
+                    transitHeader.textContent = `Transit Path (${transitMacs.length})`
+                    macSection.appendChild(transitHeader)
+                    
+                    transitMacs.forEach(mac => {
+                        const macDiv = createMacAddressDiv(mac, 'transit')
+                        macSection.appendChild(macDiv)
+                    })
+                }
+                
+                // Unknown MACs
+                if (unknownMacs.length > 0) {
+                    const unknownHeader = document.createElement('div')
+                    unknownHeader.style.fontSize = '12px'
+                    unknownHeader.style.fontWeight = '500'
+                    unknownHeader.style.color = '#374151'
+                    unknownHeader.style.marginTop = '8px'
+                    unknownHeader.textContent = `Unanalyzed (${unknownMacs.length})`
+                    macSection.appendChild(unknownHeader)
+                    
+                    unknownMacs.forEach(mac => {
+                        const macDiv = createMacAddressDiv(mac, 'unknown')
+                        macSection.appendChild(macDiv)
+                    })
+                }
+                
+                portDiv.appendChild(macSection)
+            }
+            
+            return portDiv
+        }
+        
+        // Create MAC address div with topology indicators
+        function createMacAddressDiv(mac, type) {
+            const macDiv = document.createElement('div')
+            macDiv.style.display = 'flex'
+            macDiv.style.alignItems = 'center'
+            macDiv.style.justifyContent = 'space-between'
+            macDiv.style.padding = '8px'
+            macDiv.style.borderRadius = '4px'
+            macDiv.style.fontSize = '12px'
+            const typeColor = getMacTypeColor(type)
+            macDiv.style.backgroundColor = typeColor.bg
+            macDiv.style.border = `1px solid ${typeColor.border}`
+            
+            const macInfo = document.createElement('div')
+            macInfo.style.display = 'flex'
+            macInfo.style.alignItems = 'center'
+            macInfo.style.gap = '8px'
+            
+            // Topology indicator
+            const indicator = document.createElement('div')
+            indicator.style.width = '8px'
+            indicator.style.height = '8px'
+            indicator.style.borderRadius = '50%'
+            indicator.style.backgroundColor = getIndicatorColor(type)
+            
+            const macText = document.createElement('code')
+            macText.style.fontFamily = 'monospace'
+            macText.style.fontSize = '11px'
+            macText.textContent = mac.mac_address
+            
+            macInfo.appendChild(indicator)
+            macInfo.appendChild(macText)
+            
+            // Additional info
+            const additionalInfo = document.createElement('div')
+            additionalInfo.style.textAlign = 'right'
+            additionalInfo.style.fontSize = '11px'
+            
+            if (mac.client_type && mac.client_type !== 'unknown') {
+                const clientType = document.createElement('div')
+                clientType.style.color = '#6b7280'
+                clientType.textContent = mac.client_type.replace('_', ' ')
+                additionalInfo.appendChild(clientType)
+            }
+            
+            if (type === 'transit' && mac.hop_count !== null) {
+                const hopCount = document.createElement('div')
+                hopCount.style.color = '#d97706'
+                hopCount.textContent = `${mac.hop_count} hops`
+                additionalInfo.appendChild(hopCount)
+            }
+            
+            macDiv.appendChild(macInfo)
+            macDiv.appendChild(additionalInfo)
+            
+            return macDiv
+        }
+        
+        // Helper functions for styling
+        function getModeColor(mode) {
+            switch (mode) {
+                case 'access': return { bg: '#dcfce7', text: '#166534' }
+                case 'trunk': return { bg: '#dbeafe', text: '#1e40af' }
+                case 'hybrid': return { bg: '#f3e8ff', text: '#7c3aed' }
+                default: return { bg: '#f3f4f6', text: '#374151' }
+            }
+        }
+        
+        function getMacTypeColor(type) {
+            switch (type) {
+                case 'source': return { bg: '#f0fdf4', border: '#bbf7d0' }
+                case 'transit': return { bg: '#fffbeb', border: '#fed7aa' }
+                default: return { bg: '#f9fafb', border: '#e5e7eb' }
+            }
+        }
+        
+        function getIndicatorColor(type) {
+            switch (type) {
+                case 'source': return '#10b981'
+                case 'transit': return '#f59e0b'
+                default: return '#9ca3af'
             }
         }
 
