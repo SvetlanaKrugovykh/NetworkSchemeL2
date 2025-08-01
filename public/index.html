@@ -535,6 +535,7 @@
             deviceInfo.innerHTML = `
                 <div style="font-weight: 600; color: #1f2937;">${device.hostname || 'Unknown Device'}</div>
                 <div style="font-size: 14px; color: #6b7280;">${device.ip_address}</div>
+                <div style="font-size: 12px; color: #9ca3af;">${device.device_type || 'Switch'}</div>
             `
             
             header.appendChild(deviceIcon)
@@ -577,7 +578,11 @@
             const portInfo = document.createElement('div')
             portInfo.style.fontWeight = '500'
             portInfo.style.fontSize = '14px'
-            portInfo.textContent = `Port ${port.port_number}`
+            
+            // Show port type for OLT EPON interfaces
+            const isEponPort = port.port_number && /epon[\d\-/:.]/.test(port.port_number)
+            const portTypeIndicator = isEponPort ? ' 📡' : ''
+            portInfo.textContent = `Port ${port.port_number}${portTypeIndicator}`
             
             const portMode = document.createElement('span')
             portMode.style.padding = '2px 8px'
@@ -713,11 +718,16 @@
                 additionalInfo.appendChild(clientType)
             }
             
-            if (type === 'transit' && mac.hop_count !== null) {
+            if (type === 'transit' && mac.hop_count !== null && mac.hop_count !== undefined) {
                 const hopCount = document.createElement('div')
                 hopCount.style.color = '#d97706'
                 hopCount.textContent = `${mac.hop_count} hops`
                 additionalInfo.appendChild(hopCount)
+            } else if (type === 'transit') {
+                const transitNote = document.createElement('div')
+                transitNote.style.color = '#d97706'
+                transitNote.textContent = 'transit path'
+                additionalInfo.appendChild(transitNote)
             }
             
             macDiv.appendChild(macInfo)

@@ -2,6 +2,20 @@ const pool = require('../db/pool')
 
 /**
  * Network topology analyzer - determines source vs transit MAC locations
+ * 
+ * DEVICE-SPECIFIC LOGIC:
+ * - OLT devices: EPON interfaces (epon0/1:1...epon0/8:64) are subscriber access ports
+ * - Switches: Access/untagged ports are rare but when present - likely sources
+ * - General: Ports with fewer MAC addresses are typically closer to source
+ * 
+ * LIMITATIONS: 
+ * - Real hop count calculation requires SNMP integration
+ * - Currently uses basic heuristics: OLT EPON ports > access ports > MAC count patterns
+ * - For accurate topology mapping, integrate with SNMP service for:
+ *   * CDP/LLDP neighbor discovery
+ *   * STP root path analysis  
+ *   * Link state monitoring
+ *   * Routing table analysis
  */
 class TopologyAnalyzer {
   
@@ -43,20 +57,19 @@ class TopologyAnalyzer {
       return []
     }
     
-    // Determine source location using heuristics
+    // Determine source location using enhanced heuristics
     const locations = result.rows
     let sourceLocation = null
     
-    // Priority 1: Access/untagged port (most likely source)
-    const accessPorts = locations.filter(loc => 
-      loc.port_mode === 'untagged' || loc.port_mode === 'access'
-    )
+    // Priority 1: Subscriber access ports (OLT EPON interfaces, switch access ports)
+    const accessPorts = locations.filter(loc => this.isSubscriberAccessPort(loc))
     
     if (accessPorts.length > 0) {
-      sourceLocation = accessPorts[0]
+      // If multiple access ports, choose the one with fewer MAC addresses
+      sourceLocation = accessPorts.sort((a, b) => a.port_mac_count - b.port_mac_count)[0]
     } else {
       // Priority 2: Port with fewest MAC addresses (likely closest to source)
-      sourceLocation = locations[0]
+      sourceLocation = locations[0] // Already sorted by port_mac_count ASC
     }
     
     // Update database with source/transit information
@@ -65,7 +78,8 @@ class TopologyAnalyzer {
     return locations.map(loc => ({
       ...loc,
       is_source: loc.id === sourceLocation.id,
-      hop_count: loc.id === sourceLocation.id ? 0 : this.calculateHopCount(loc, sourceLocation)
+      // Distance calculation removed - requires SNMP topology data
+      hop_count: loc.id === sourceLocation.id ? 0 : null
     }))
   }
   
@@ -75,7 +89,9 @@ class TopologyAnalyzer {
   static async updateMacLocationTypes(locations, sourceLocation) {
     for (const location of locations) {
       const isSource = location.id === sourceLocation.id
-      const hopCount = isSource ? 0 : this.calculateHopCount(location, sourceLocation)
+      // For now, set hop_count to null for transit locations
+      // Real hop count requires SNMP data (CDP/LLDP neighbors, STP paths)
+      const hopCount = isSource ? 0 : null
       
       await pool.query(`
         UPDATE mac_addresses 
@@ -86,12 +102,42 @@ class TopologyAnalyzer {
   }
   
   /**
-   * Calculate network hop count (simplified heuristic)
+   * Calculate network distance (placeholder for SNMP-based analysis)
+   * TODO: Implement real topology discovery using:
+   * - SNMP CDP/LLDP neighbor discovery  
+   * - STP root path cost analysis
+   * - Routing table analysis
+   * - Physical link state monitoring
    */
-  static calculateHopCount(location, sourceLocation) {
-    // Simple heuristic: use MAC count on port as hop indicator
-    // Lower MAC count = closer to source
-    return Math.max(1, Math.floor(location.port_mac_count / 10))
+  static calculateNetworkDistance(location, sourceLocation) {
+    // Placeholder - real implementation needs SNMP service integration
+    // For now, return null to indicate unknown distance
+    return null
+  }
+  
+  /**
+   * Determine if port is likely a subscriber access port
+   * @param {Object} location - Location data with device and port info
+   */
+  static isSubscriberAccessPort(location) {
+    const deviceHostname = (location.device_hostname || '').toLowerCase()
+    const deviceType = (location.device_type || '').toLowerCase()
+    const portNumber = location.port_number || ''
+    const portType = (location.port_type || '').toLowerCase()
+    
+    // OLT EPON interfaces (e.g., epon0/1:1, epon-0/8:64)
+    if (deviceType.includes('olt') || deviceHostname.includes('olt')) {
+      if (portType.includes('epon') || /epon[\d\-\/:]/.test(portNumber)) {
+        return true
+      }
+    }
+    
+    // Switch access ports (rare but when present)
+    if (location.port_mode === 'access' || location.port_mode === 'untagged') {
+      return true
+    }
+    
+    return false
   }
   
   /**
