@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scheme L2 - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            color: #4a90e2;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #357abd, #2968a3);
+            transform: translateY(-1px);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .btn.success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+        
+        .status.loading {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        
+        .status.success {
+            background: #55efc4;
+            color: #00b894;
+        }
+        
+        .status.error {
+            background: #fd79a8;
+            color: #e84393;
+        }
+        
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: linear-gradient(135deg, #a8e6cf, #7fcdcd);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Network Scheme L2</h1>
+            <p>Система анализа сетевой топологии и генерации VLAN схем</p>
+        </div>
+        
+        <div class="content">
+            <!-- Статистика -->
+            <div class="section">
+                <h2>📊 Статистика</h2>
+                <div class="stats" id="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="deviceCount">-</div>
+                        <div class="stat-label">Устройства</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="vlanCount">-</div>
+                        <div class="stat-label">VLAN</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="macCount">-</div>
+                        <div class="stat-label">MAC адреса</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="portCount">-</div>
+                        <div class="stat-label">Порты</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Управление данными -->
+            <div class="section">
+                <h2>📁 Управление данными</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>🔄 Импорт данных</h3>
+                        <p>Импорт конфигураций и MAC таблиц из директории data/</p>
+                        <button class="btn" onclick="importData()">Импортировать данные</button>
+                        <div id="importStatus"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>📋 Просмотр устройств</h3>
+                        <p>Список всех импортированных сетевых устройств</p>
+                        <button class="btn" onclick="loadDevices()">Показать устройства</button>
+                        <div id="devicesStatus"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🌐 Просмотр VLAN</h3>
+                        <p>Список всех VLAN в сети</p>
+                        <button class="btn" onclick="loadVlans()">Показать VLAN</button>
+                        <div id="vlansStatus"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Генерация схем -->
+            <div class="section">
+                <h2>🎨 Генерация схем</h2>
+                <div class="card">
+                    <h3>📊 HTML схема VLAN</h3>
+                    <p>Генерация детальной схемы прохождения VLAN через устройства</p>
+                    
+                    <div class="input-group">
+                        <label for="vlanId">VLAN ID:</label>
+                        <input type="number" id="vlanId" placeholder="Введите ID VLAN (например, 13)" value="13">
+                    </div>
+                    
+                    <button class="btn success" onclick="generateVlanScheme()">Сгенерировать схему</button>
+                    <button class="btn" onclick="viewVlanTopology()">Показать топологию (JSON)</button>
+                    <button class="btn" onclick="viewVlanMacs()">Показать MAC адреса</button>
+                </div>
+            </div>
+            
+            <!-- Результаты -->
+            <div class="section">
+                <h2>📝 Результаты</h2>
+                <div id="results">
+                    <p>Результаты операций будут отображаться здесь...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Загрузка статистики при загрузке страницы
+        window.onload = function() {
+            loadStats();
+        };
+
+        async function loadStats() {
+            try {
+                const [devices, vlans] = await Promise.all([
+                    fetch('/api/devices').then(r => r.json()),
+                    fetch('/api/vlans').then(r => r.json())
+                ]);
+                
+                document.getElementById('deviceCount').textContent = devices.data?.length || 0;
+                document.getElementById('vlanCount').textContent = vlans.data?.length || 0;
+                
+                // Подсчет портов (примерно)
+                const totalPorts = devices.data?.reduce((sum, device) => sum + (device.ports?.length || 28), 0) || 0;
+                document.getElementById('portCount').textContent = totalPorts;
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function importData() {
+            const statusDiv = document.getElementById('importStatus');
+            statusDiv.innerHTML = '<span class="status loading">Импорт данных...</span>';
+            
+            try {
+                const response = await fetch('/api/import', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `
+                        <span class="status success">Успешно!</span>
+                        <div class="log">
+                            Устройств импортировано: ${result.results.devicesImported}
+                            MAC таблиц импортировано: ${result.results.macTablesImported}
+                            Ошибок: ${result.results.errors.length}
+                        </div>
+                    `;
+                    loadStats(); // Обновляем статистику
+                } else {
+                    statusDiv.innerHTML = `<span class="status error">Ошибка: ${result.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="status error">Ошибка: ${error.message}</span>`;
+            }
+        }
+
+        async function loadDevices() {
+            const statusDiv = document.getElementById('devicesStatus');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const response = await fetch('/api/devices');
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `<span class="status success">Загружено ${result.data.length} устройств</span>`;
+                    
+                    let html = '<h3>📱 Сетевые устройства</h3><div class="grid">';
+                    result.data.forEach(device => {
+                        html += `
+                            <div class="card">
+                                <h4>${device.hostname}</h4>
+                                <p><strong>IP:</strong> ${device.ip_address}</p>
+                                <p><strong>Тип:</strong> ${device.device_type}</p>
+                                <p><strong>Модель:</strong> ${device.model || 'N/A'}</p>
+                                <button class="btn" onclick="viewDevice(${device.id})">Подробнее</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    statusDiv.innerHTML = `<span class="status error">Ошибка: ${result.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="status error">Ошибка: ${error.message}</span>`;
+            }
+        }
+
+        async function loadVlans() {
+            const statusDiv = document.getElementById('vlansStatus');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const response = await fetch('/api/vlans');
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = `<span class="status success">Загружено ${result.data.length} VLAN</span>`;
+                    
+                    let html = '<h3>🌐 VLAN Конфигурация</h3><div class="grid">';
+                    result.data.slice(0, 20).forEach(vlan => { // Показываем первые 20
+                        html += `
+                            <div class="card">
+                                <h4>VLAN ${vlan.vlan_id}</h4>
+                                <p><strong>Название:</strong> ${vlan.name}</p>
+                                <p><strong>Тип:</strong> ${vlan.type}</p>
+                                <p>${vlan.description}</p>
+                                <button class="btn" onclick="generateVlanScheme(${vlan.vlan_id})">Схема</button>
+                                <button class="btn" onclick="viewVlanTopology(${vlan.vlan_id})">Топология</button>
+                            </div>
+                        `;
+                    });
+                    if (result.data.length > 20) {
+                        html += `<div class="card"><p>И еще ${result.data.length - 20} VLAN...</p></div>`;
+                    }
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    statusDiv.innerHTML = `<span class="status error">Ошибка: ${result.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="status error">Ошибка: ${error.message}</span>`;
+            }
+        }
+
+        function generateVlanScheme(vlanId) {
+            if (!vlanId) {
+                vlanId = document.getElementById('vlanId').value;
+            }
+            
+            if (!vlanId) {
+                alert('Введите VLAN ID');
+                return;
+            }
+            
+            window.open(`/api/vlans/${vlanId}/scheme`, '_blank');
+        }
+
+        async function viewVlanTopology(vlanId) {
+            if (!vlanId) {
+                vlanId = document.getElementById('vlanId').value;
+            }
+            
+            if (!vlanId) {
+                alert('Введите VLAN ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/vlans/${vlanId}/topology`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <h3>🔗 Топология VLAN ${vlanId}</h3>
+                        <div class="log">${JSON.stringify(result.data, null, 2)}</div>
+                    `;
+                } else {
+                    alert('Ошибка: ' + result.error);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function viewVlanMacs(vlanId) {
+            if (!vlanId) {
+                vlanId = document.getElementById('vlanId').value;
+            }
+            
+            if (!vlanId) {
+                alert('Введите VLAN ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/vlans/${vlanId}/macs`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const resultsDiv = document.getElementById('results');
+                    let html = `<h3>🏷️ MAC адреса в VLAN ${vlanId}</h3>`;
+                    
+                    if (result.data.length === 0) {
+                        html += '<p>MAC адреса не найдены</p>';
+                    } else {
+                        html += '<div class="grid">';
+                        result.data.forEach(mac => {
+                            html += `
+                                <div class="card">
+                                    <h4>${mac.mac_address}</h4>
+                                    ${mac.ip_address ? `<p><strong>IP:</strong> ${mac.ip_address}</p>` : ''}
+                                    <p><strong>Устройство:</strong> ${mac.hostname || mac.device_ip}</p>
+                                    <p><strong>Порт:</strong> ${mac.port_number}</p>
+                                    <p><strong>Тип:</strong> ${mac.client_type || 'unknown'}</p>
+                                    ${mac.description ? `<p>${mac.description}</p>` : ''}
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    alert('Ошибка: ' + result.error);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function viewDevice(deviceId) {
+            try {
+                const response = await fetch(`/api/devices/${deviceId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const device = result.data;
+                    const resultsDiv = document.getElementById('results');
+                    
+                    let html = `
+                        <h3>📱 ${device.hostname}</h3>
+                        <p><strong>IP:</strong> ${device.ip_address}</p>
+                        <p><strong>Тип:</strong> ${device.device_type}</p>
+                        <p><strong>Модель:</strong> ${device.model}</p>
+                        <p><strong>Статус:</strong> ${device.status}</p>
+                    `;
+                    
+                    if (device.ports && device.ports.length > 0) {
+                        html += '<h4>🔌 Порты</h4><div class="grid">';
+                        device.ports.slice(0, 12).forEach(port => {
+                            html += `
+                                <div class="card">
+                                    <h5>Port ${port.port_number}</h5>
+                                    <p><strong>Тип:</strong> ${port.port_type}</p>
+                                    <p><strong>Статус:</strong> ${port.status}</p>
+                                    ${port.description ? `<p>${port.description}</p>` : ''}
+                                </div>
+                            `;
+                        });
+                        if (device.ports.length > 12) {
+                            html += `<div class="card"><p>И еще ${device.ports.length - 12} портов...</p></div>`;
+                        }
+                        html += '</div>';
+                    }
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    alert('Ошибка: ' + result.error);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
