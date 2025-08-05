@@ -369,8 +369,8 @@
                 return `
                     <div class="device-card">
                         <div class="device-header">
-                            <div class="device-name">${device.name}</div>
-                            <div class="device-ip">${device.ip}</div>
+                            <div class="device-name">${device.hostname || device.name || 'Неизвестное устройство'}</div>
+                            <div class="device-ip">${device.ip_address || device.ip}</div>
                         </div>
                         <div class="device-body">
                             <div class="device-stat">
@@ -430,8 +430,10 @@
             }
             
             const filtered = allDevices.filter(device => 
-                device.name.toLowerCase().includes(searchTerm) ||
-                device.ip.toLowerCase().includes(searchTerm) ||
+                (device.hostname && device.hostname.toLowerCase().includes(searchTerm)) ||
+                (device.name && device.name.toLowerCase().includes(searchTerm)) ||
+                (device.ip_address && device.ip_address.toLowerCase().includes(searchTerm)) ||
+                (device.ip && device.ip.toLowerCase().includes(searchTerm)) ||
                 (device.device_type && device.device_type.toLowerCase().includes(searchTerm))
             );
             
@@ -443,10 +445,19 @@
             if (!device) return;
             
             const detailsWindow = window.open('', '_blank');
+            const portsHtml = device.ports && device.ports.length > 0 ?
+                device.ports.map(port => `
+                    <div class="port">
+                        <div class="port-name">${port.port_name}</div>
+                        <div class="port-stats">MAC адресов: ${port.mac_count || 0}</div>
+                    </div>
+                `).join('') :
+                '<p style="color: #9ca3af;">Порты не найдены</p>';
+            
             detailsWindow.document.write(`
-                <html>
+                <html lang="ru">
                     <head>
-                        <title>Устройство ${device.name}</title>
+                        <title>Устройство ${device.hostname || device.name || 'Неизвестное'}</title>
                         <style>
                             body { 
                                 font-family: Arial, sans-serif; 
@@ -480,31 +491,13 @@
                     </head>
                     <body>
                         <div class="device-info">
-                            <h1>🖥️ ${device.name}</h1>
-                            <p><strong>IP адрес:</strong> ${device.ip}</p>
+                            <h1>🖥️ ${device.hostname || device.name || 'Неизвестное устройство'}</h1>
+                            <p><strong>IP адрес:</strong> ${device.ip_address || device.ip}</p>
                             <p><strong>Тип:</strong> ${device.device_type || 'Не указан'}</p>
                             <p><strong>Портов:</strong> ${device.ports ? device.ports.length : 0}</p>
                         </div>
                         <h2>Порты устройства:</h2>
-                        <div id="ports"></div>
-                        <script>
-                            const ports = ${JSON.stringify(device.ports || [])};
-                            const portsDiv = document.getElementById('ports');
-                            
-                            if (ports.length === 0) {
-                                portsDiv.innerHTML = '<p style="color: #9ca3af;">Порты не найдены</p>';
-                            } else {
-                                ports.forEach(port => {
-                                    const portDiv = document.createElement('div');
-                                    portDiv.className = 'port';
-                                    portDiv.innerHTML = \`
-                                        <div class="port-name">\${port.port_name}</div>
-                                        <div class="port-stats">MAC адресов: \${port.mac_count || 0}</div>
-                                    \`;
-                                    portsDiv.appendChild(portDiv);
-                                });
-                            }
-                        </script>
+                        <div id="ports">${portsHtml}</div>
                     </body>
                 </html>
             `);
@@ -518,10 +511,20 @@
                 if (result.success) {
                     const device = allDevices.find(d => d.id === deviceId);
                     const vlanWindow = window.open('', '_blank');
+                    
+                    const vlansHtml = result.data.length > 0 ?
+                        result.data.map(vlan => `
+                            <div class="vlan">
+                                <div class="vlan-id">VLAN ${vlan.vlan_id}</div>
+                                <div class="vlan-stats">MAC адресов: ${vlan.mac_count || 0}</div>
+                            </div>
+                        `).join('') :
+                        '<p style="color: #9ca3af;">VLAN не найдены</p>';
+                    
                     vlanWindow.document.write(`
-                        <html>
+                        <html lang="ru">
                             <head>
-                                <title>VLAN устройства ${device ? device.name : deviceId}</title>
+                                <title>VLAN устройства ${device ? (device.hostname || device.name) : deviceId}</title>
                                 <style>
                                     body { font-family: Arial, sans-serif; padding: 20px; }
                                     .vlan { margin: 10px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
@@ -530,26 +533,8 @@
                                 </style>
                             </head>
                             <body>
-                                <h1>VLAN устройства ${device ? device.name : deviceId}</h1>
-                                <div id="vlans"></div>
-                                <script>
-                                    const vlans = ${JSON.stringify(result.data)};
-                                    const vlansDiv = document.getElementById('vlans');
-                                    
-                                    if (vlans.length === 0) {
-                                        vlansDiv.innerHTML = '<p style="color: #9ca3af;">VLAN не найдены</p>';
-                                    } else {
-                                        vlans.forEach(vlan => {
-                                            const vlanDiv = document.createElement('div');
-                                            vlanDiv.className = 'vlan';
-                                            vlanDiv.innerHTML = \`
-                                                <div class="vlan-id">VLAN \${vlan.vlan_id}</div>
-                                                <div class="vlan-stats">MAC адресов: \${vlan.mac_count || 0}</div>
-                                            \`;
-                                            vlansDiv.appendChild(vlanDiv);
-                                        });
-                                    }
-                                </script>
+                                <h1>VLAN устройства ${device ? (device.hostname || device.name) : deviceId}</h1>
+                                <div id="vlans">${vlansHtml}</div>
                             </body>
                         </html>
                     `);

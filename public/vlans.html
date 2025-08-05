@@ -364,39 +364,43 @@
                 const response = await fetch(`/api/vlans/${vlanId}/topology`);
                 const result = await response.json();
                 
-                if (result.success) {
-                    // Открываем новую вкладку с топологией
+                if (result.success && result.data && result.data.devices) {
                     const topologyWindow = window.open('', '_blank');
+                    
+                    const topologyHtml = result.data.devices.map(device => {
+                        const portsHtml = device.ports.map(port => 
+                            `<div class="port">Порт: ${port.port_name} - MAC адресов: ${port.mac_count || 0}</div>`
+                        ).join('');
+                        
+                        return `
+                            <div class="device">
+                                <div class="device-name">${device.hostname} (${device.ip_address})</div>
+                                ${portsHtml}
+                            </div>
+                        `;
+                    }).join('');
+                    
                     topologyWindow.document.write(`
-                        <html>
+                        <html lang="ru">
                             <head>
                                 <title>VLAN ${vlanId} - Топология</title>
                                 <style>
                                     body { font-family: Arial, sans-serif; padding: 20px; }
                                     .device { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-                                    .device-name { font-weight: bold; color: #333; }
-                                    .port { margin-left: 20px; color: #666; }
+                                    .device-name { font-weight: bold; color: #333; margin-bottom: 10px; }
+                                    .port { margin-left: 20px; color: #666; padding: 2px 0; }
                                 </style>
                             </head>
                             <body>
                                 <h1>VLAN ${vlanId} - Топология</h1>
-                                <div id="topology"></div>
-                                <script>
-                                    const data = ${JSON.stringify(result.data)};
-                                    const topologyDiv = document.getElementById('topology');
-                                    
-                                    data.forEach(device => {
-                                        const deviceDiv = document.createElement('div');
-                                        deviceDiv.className = 'device';
-                                        deviceDiv.innerHTML = '<div class="device-name">' + device.device_name + ' (' + device.device_ip + ')</div><div class="port">Порт: ' + device.port_name + ' - MAC адресов: ' + device.mac_count + '</div>';
-                                        topologyDiv.appendChild(deviceDiv);
-                                    });
-                                </script>
+                                <p><strong>Название:</strong> ${result.data.vlan_name}</p>
+                                <p><strong>Описание:</strong> ${result.data.vlan_description || 'Не указано'}</p>
+                                <div id="topology">${topologyHtml}</div>
                             </body>
                         </html>
                     `);
                 } else {
-                    alert('Ошибка загрузки топологии: ' + result.message);
+                    alert('Ошибка загрузки топологии: ' + (result.message || 'Данные не найдены'));
                 }
             } catch (error) {
                 alert('Ошибка: ' + error.message);
