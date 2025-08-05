@@ -127,17 +127,31 @@ class ImportService {
    */
   static async importMacTable(macTableText, deviceIp, format = 'auto') {
     try {
-      // Get device information
-      const deviceResult = await pool.query(
+      // Get or create device information
+      let deviceResult = await pool.query(
         'SELECT id, hostname, device_type FROM devices WHERE ip_address = $1',
         [deviceIp]
       )
       
+      let device
       if (deviceResult.rows.length === 0) {
-        throw new Error(`Device not found: ${deviceIp}. Please import device configuration first.`)
+        // Auto-create device if it doesn't exist
+        console.log(`Auto-creating device for MAC table import: ${deviceIp}`)
+        const insertResult = await pool.query(`
+          INSERT INTO devices (ip_address, hostname, device_type, description, status)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING id, hostname, device_type
+        `, [
+          deviceIp,
+          `auto-${deviceIp.replace(/\./g, '-')}`,
+          'Switch', // Default type for MAC table devices
+          `Auto-created from MAC table import on ${new Date().toISOString()}`,
+          'discovered'
+        ])
+        device = insertResult.rows[0]
+      } else {
+        device = deviceResult.rows[0]
       }
-      
-      const device = deviceResult.rows[0]
       
       // Get port mappings for enhanced parsing
       const portMappings = await this.getPortMappings(device.id)
@@ -147,7 +161,7 @@ class ImportService {
       if (format === 'dlink') {
         macEntries = MacTableParser.parseDlinkMacTable(macTableText, device)
       } else if (format === 'cisco') {
-        macEntries = MacTableParser.parseCiscoMacTable(macTableText, device)
+        macEntries = MacTableParser.parseOltMacTable(macTableText, device)
       } else {
         macEntries = MacTableParser.parseWithTopologyContext(macTableText, {
           deviceInfo: device,
@@ -180,6 +194,20 @@ class ImportService {
             continue
           }
           
+          // Ensure VLAN exists (auto-create if missing)
+          if (entry.vlan_id) {
+            await pool.query(`
+              INSERT INTO vlans (vlan_id, name, description, type)
+              VALUES ($1, $2, $3, $4)
+              ON CONFLICT (vlan_id) DO NOTHING
+            `, [
+              entry.vlan_id,
+              `VLAN ${entry.vlan_id}`,
+              `Auto-created from MAC table import`,
+              'standard'
+            ])
+          }
+
           // Insert MAC address entry
           await pool.query(`
             INSERT INTO mac_addresses (
@@ -330,14 +358,33 @@ class ImportService {
       return portMappings[portIdentifier].id
     }
     
-    // Fallback to database query
-    const result = await pool.query(`
+    // First try to find existing port
+    let result = await pool.query(`
       SELECT id FROM device_ports 
       WHERE device_id = $1 AND (port_number = $2 OR port_name = $3)
       LIMIT 1
     `, [deviceId, parseInt(portIdentifier) || 0, portIdentifier])
     
-    return result.rows.length > 0 ? result.rows[0].id : null
+    if (result.rows.length > 0) {
+      return result.rows[0].id
+    }
+    
+    // Auto-create port if it doesn't exist
+    console.log(`Auto-creating port ${portIdentifier} for device ${deviceId}`)
+    const insertResult = await pool.query(`
+      INSERT INTO device_ports (device_id, port_number, port_name, port_type, admin_state, description)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `, [
+      deviceId,
+      parseInt(portIdentifier) || 0,
+      portIdentifier,
+      'ethernet', // Default port type
+      'up', // Assume port is up if MAC entries exist
+      `Auto-created port from MAC table on ${new Date().toISOString()}`
+    ])
+    
+    return insertResult.rows[0].id
   }
   
   /**
@@ -661,6 +708,106 @@ class ImportService {
     }
     
     return result.rows[0]
+  }
+
+  /**
+   * Import all configurations and MAC tables from directory
+   * @param {string} dataDir - Directory containing config and mac files
+   */
+  static async importFromDirectory(dataDir) {
+    const fs = require('fs')
+    const path = require('path')
+    
+    const results = {
+      devices: [],
+      macTables: [],
+      errors: []
+    }
+    
+    try {
+      const configsDir = path.join(dataDir, 'configs')
+      const macsDir = path.join(dataDir, 'macs')
+      
+      // Check if directories exist
+      if (!fs.existsSync(configsDir)) {
+        results.errors.push(`Configs directory not found: ${configsDir}`)
+      }
+      
+      if (!fs.existsSync(macsDir)) {
+        results.errors.push(`MACs directory not found: ${macsDir}`)
+      }
+      
+      // Import configurations
+      if (fs.existsSync(configsDir)) {
+        const configFiles = fs.readdirSync(configsDir).filter(file => 
+          file.endsWith('.cfg') || file.endsWith('.txt') || file.endsWith('.conf')
+        )
+        
+        for (const configFile of configFiles) {
+          try {
+            const filePath = path.join(configsDir, configFile)
+            const configText = fs.readFileSync(filePath, 'utf8')
+            
+            // Extract IP from filename (assuming format like 192_168_1_1.cfg or 192.168.1.1.cfg)
+            const ipMatch = configFile.match(/(\d+)[._](\d+)[._](\d+)[._](\d+)/)
+            const deviceIp = ipMatch ? `${ipMatch[1]}.${ipMatch[2]}.${ipMatch[3]}.${ipMatch[4]}` : `unknown-${configFile}`
+            
+            console.log(`Importing config: ${configFile} for device ${deviceIp}`)
+            
+            const result = await this.importConfigAuto(configText, deviceIp)
+            results.devices.push({
+              file: configFile,
+              ip: deviceIp,
+              type: result.detected_type,
+              stats: result.stats
+            })
+            
+          } catch (error) {
+            console.error(`Error importing config ${configFile}:`, error.message)
+            results.errors.push(`Config ${configFile}: ${error.message}`)
+          }
+        }
+      }
+      
+      // Import MAC tables
+      if (fs.existsSync(macsDir)) {
+        const macFiles = fs.readdirSync(macsDir).filter(file => 
+          file.endsWith('.mac') || file.endsWith('.txt')
+        )
+        
+        for (const macFile of macFiles) {
+          try {
+            const filePath = path.join(macsDir, macFile)
+            const macText = fs.readFileSync(filePath, 'utf8')
+            
+            // Extract IP from filename (assuming format like 192_168_1_1.mac or 192.168.1.1.mac)
+            const ipMatch = macFile.match(/(\d+)[._](\d+)[._](\d+)[._](\d+)/)
+            const deviceIp = ipMatch ? `${ipMatch[1]}.${ipMatch[2]}.${ipMatch[3]}.${ipMatch[4]}` : `unknown-${macFile}`
+            
+            console.log(`Importing MAC table: ${macFile} for device ${deviceIp}`)
+            
+            const result = await this.importMacTable(macText, deviceIp)
+            results.macTables.push({
+              file: macFile,
+              ip: deviceIp,
+              stats: result.stats
+            })
+            
+          } catch (error) {
+            console.error(`Error importing MAC table ${macFile}:`, error.message)
+            results.errors.push(`MAC table ${macFile}: ${error.message}`)
+          }
+        }
+      }
+      
+      console.log(`Import completed: ${results.devices.length} devices, ${results.macTables.length} MAC tables, ${results.errors.length} errors`)
+      
+    } catch (error) {
+      console.error('Directory import error:', error)
+      results.errors.push(`Directory import error: ${error.message}`)
+    }
+    
+    return results
   }
 }
 

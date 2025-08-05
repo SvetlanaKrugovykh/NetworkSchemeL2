@@ -157,9 +157,9 @@ class MacTableParser {
       
       // Parse the MAC table entry - D-Link format
       const parts = line.split(/\s+/)
-      if (parts.length >= 4) {
+      if (parts.length >= 5) {
         const vlanId = parseInt(parts[0])
-        const vlanName = parts[1] // Skip VLAN name
+        const vlanName = parts[1] // Skip VLAN name  
         const macAddress = this.normalizeMacAddress(parts[2])
         const port = parts[3]
         const type = parts[4] || 'Dynamic'

@@ -56,17 +56,17 @@ class VlanModel {
       native_vlan = false,
       qinq_enabled = false,
       outer_vlan = null,
-      inner_vlan = null
+      inner_vlan_id = null
     } = deviceVlanData
 
     const query = `
-      INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan, qinq_enabled, outer_vlan, inner_vlan)
+      INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan, qinq_enabled, outer_vlan, inner_vlan_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (device_id, port_id, vlan_id, mode) DO UPDATE SET
         native_vlan = EXCLUDED.native_vlan,
         qinq_enabled = EXCLUDED.qinq_enabled,
         outer_vlan = EXCLUDED.outer_vlan,
-        inner_vlan = EXCLUDED.inner_vlan
+        inner_vlan_id = EXCLUDED.inner_vlan_id
       RETURNING *
     `
     
@@ -95,7 +95,7 @@ class VlanModel {
         dv.native_vlan,
         dv.qinq_enabled,
         dv.outer_vlan,
-        dv.inner_vlan,
+        dv.inner_vlan_id,
         v.name as vlan_name,
         v.description as vlan_description
       FROM device_vlans dv
@@ -138,7 +138,7 @@ class VlanModel {
         native_vlan: item.native_vlan,
         qinq_enabled: item.qinq_enabled,
         outer_vlan: item.outer_vlan,
-        inner_vlan: item.inner_vlan
+        inner_vlan_id: item.inner_vlan_id
       })
     })
     

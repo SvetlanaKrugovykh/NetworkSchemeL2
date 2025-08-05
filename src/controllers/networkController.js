@@ -449,6 +449,45 @@ class NetworkController {
       })
     }
   }
+
+  /**
+   * Get MAC address statistics
+   */
+  static async getMacStats(request, reply) {
+    try {
+      const pool = require('../db/pool')
+      
+      // Get MAC count by VLAN
+      const vlanStats = await pool.query(`
+        SELECT vlan_id, COUNT(*) as mac_count 
+        FROM mac_addresses 
+        GROUP BY vlan_id 
+        ORDER BY vlan_id
+      `)
+      
+      // Get total MAC count
+      const totalStats = await pool.query(`
+        SELECT 
+          COUNT(*) as total_macs,
+          COUNT(DISTINCT vlan_id) as vlans_with_macs,
+          COUNT(DISTINCT device_id) as devices_with_macs
+        FROM mac_addresses
+      `)
+      
+      reply.send({
+        success: true,
+        data: {
+          total: totalStats.rows[0],
+          by_vlan: vlanStats.rows
+        }
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
 }
 
 module.exports = NetworkController

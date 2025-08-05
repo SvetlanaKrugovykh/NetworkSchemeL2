@@ -48,6 +48,9 @@ async function networkRoutes(fastify, options) {
   fastify.get('/api/vlans/:vlanId/topology', NetworkController.getVlanTopology)
   fastify.get('/api/vlans/:vlanId/macs', NetworkController.getVlanMacs)
   
+  // Statistics
+  fastify.get('/api/stats/macs', NetworkController.getMacStats)
+  
   // HTML scheme generation
   fastify.get('/api/vlans/:vlanId/scheme', NetworkController.generateVlanScheme)
   
