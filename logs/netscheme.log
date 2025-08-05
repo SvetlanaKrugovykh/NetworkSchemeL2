@@ -1,0 +1,8 @@
+2025-08-05T14:05:12.850Z [INFO]: 🚀 Network Scheme L2 server is running at http://127.0.0.1:7111
+2025-08-05T14:05:12.851Z [INFO]: 📊 API endpoints available at http://127.0.0.1:7111/
+2025-08-05T14:05:12.851Z [INFO]: 📁 Data directory: D:\01_Project_JS_NodeJS\!!!_003_NetSchemeL2\data
+2025-08-05T14:05:12.912Z [ERROR]: Error updating database schema: error: syntax error at or near "inner_vlan"
+2025-08-05T14:07:40.593Z [INFO]: 🚀 Network Scheme L2 server is running at http://127.0.0.1:7111
+2025-08-05T14:07:40.594Z [INFO]: 📊 API endpoints available at http://127.0.0.1:7111/
+2025-08-05T14:07:40.594Z [INFO]: 📁 Data directory: D:\01_Project_JS_NodeJS\!!!_003_NetSchemeL2\data
+2025-08-05T14:07:40.743Z [INFO]: Database schema updated successfully

@@ -1,4 +1,5 @@
 const DlinkConfigParser = require('../parsers/dlinkConfigParser')
+const OltConfigParser = require('../parsers/oltConfigParser')
 const MacTableParser = require('../parsers/macTableParser')
 const TopologyAnalyzer = require('./topologyAnalyzer')
 const DeviceModel = require('../models/deviceModel')
@@ -375,6 +376,237 @@ class ImportService {
     return nativeVlan ? nativeVlan.vlan_id : null
   }
   
+  /**
+   * Auto-detect device type and import configuration
+   * @param {string} configText - Configuration text
+   * @param {string} deviceIp - Device IP address
+   */
+  static async importConfigAuto(configText, deviceIp) {
+    try {
+      // Detect device type from configuration content
+      const deviceType = this.detectDeviceType(configText)
+      
+      console.log(`Auto-detected device type: ${deviceType} for ${deviceIp}`)
+      
+      let result
+      switch (deviceType) {
+        case 'OLT':
+          result = await this.importOltConfig(configText, deviceIp)
+          break
+        
+        case 'D-Link':
+          result = await this.importDlinkConfig(configText, deviceIp)
+          break
+        
+        default:
+          // Try OLT first, then D-Link
+          result = await this.importOltConfig(configText, deviceIp)
+          if (!result.success) {
+            result = await this.importDlinkConfig(configText, deviceIp)
+          }
+      }
+      
+      return {
+        ...result,
+        detected_type: deviceType
+      }
+      
+    } catch (error) {
+      console.error('Error in auto-import:', error)
+      return {
+        success: false,
+        error: error.message,
+        message: `Failed to auto-import configuration for ${deviceIp}`
+      }
+    }
+  }
+  
+  /**
+   * Import OLT configuration
+   * @param {string} configText - Configuration text
+   * @param {string} deviceIp - Device IP address
+   */
+  static async importOltConfig(configText, deviceIp) {
+    try {
+      const parser = new OltConfigParser()
+      const parsedConfig = parser.parse(configText, deviceIp)
+      
+      // Create or update device
+      const deviceId = await DeviceModel.createOrUpdate({
+        ip_address: deviceIp,
+        hostname: parsedConfig.device.hostname || `olt-${deviceIp}`,
+        device_type: parsedConfig.device.model || 'OLT',
+        description: `OLT imported from configuration on ${new Date().toISOString()}`,
+        mac_address: null,
+        serial_number: null,
+        firmware_version: parsedConfig.device.firmware || null,
+        hardware_version: null
+      })
+      
+      console.log(`OLT Device imported/updated: ${deviceIp} (ID: ${deviceId})`)
+      
+      // Import VLANs
+      for (const vlan of parsedConfig.vlans) {
+        await VlanModel.createOrUpdate({
+          vlan_id: vlan.vlan_id,
+          name: vlan.vlan_name,
+          description: vlan.description || `VLAN ${vlan.vlan_id}`,
+          type: 'ethernet'
+        })
+      }
+      
+      // Import ports (including EPON subscriber ports)
+      for (const port of parsedConfig.ports) {
+        const portResult = await pool.query(`
+          INSERT INTO device_ports (device_id, port_number, port_name, port_type, description, admin_state, oper_state)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (device_id, port_number) 
+          DO UPDATE SET 
+            port_name = EXCLUDED.port_name,
+            port_type = EXCLUDED.port_type,
+            description = EXCLUDED.description,
+            admin_state = EXCLUDED.admin_state,
+            oper_state = EXCLUDED.oper_state
+          RETURNING id
+        `, [
+          deviceId,
+          port.port_number,
+          port.port_name,
+          port.port_type,
+          port.description || null,
+          port.status || 'up',
+          port.status || 'up'
+        ])
+        
+        const portId = portResult.rows[0].id
+        
+        // Import VLAN assignments
+        if (port.vlans && port.vlans.length > 0) {
+          for (const vlanId of port.vlans) {
+            await pool.query(`
+              INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
+              VALUES ($1, $2, $3, $4, $5)
+              ON CONFLICT (device_id, port_id, vlan_id)
+              DO UPDATE SET 
+                mode = EXCLUDED.mode,
+                native_vlan = EXCLUDED.native_vlan
+            `, [
+              deviceId,
+              portId,
+              vlanId,
+              port.mode || 'tagged',
+              port.native_vlan === vlanId
+            ])
+          }
+        }
+        
+        // For EPON access ports, add native VLAN if specified
+        if (port.native_vlan && port.port_type === 'EPON_ACCESS') {
+          await pool.query(`
+            INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (device_id, port_id, vlan_id)
+            DO UPDATE SET 
+              mode = EXCLUDED.mode,
+              native_vlan = EXCLUDED.native_vlan
+          `, [
+            deviceId,
+            portId,
+            port.native_vlan,
+            'access',
+            true
+          ])
+        }
+      }
+      
+      // Store subscriber information for EPON ports
+      for (const subscriber of parsedConfig.subscribers) {
+        if (subscriber.vlan) {
+          // Find the subscriber port
+          const portResult = await pool.query(`
+            SELECT id FROM device_ports 
+            WHERE device_id = $1 AND port_name = $2
+          `, [deviceId, subscriber.interface_name])
+          
+          if (portResult.rows.length > 0) {
+            const portId = portResult.rows[0].id
+            
+            await pool.query(`
+              INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
+              VALUES ($1, $2, $3, $4, $5)
+              ON CONFLICT (device_id, port_id, vlan_id)
+              DO UPDATE SET 
+                mode = EXCLUDED.mode,
+                native_vlan = EXCLUDED.native_vlan
+            `, [
+              deviceId,
+              portId,
+              subscriber.vlan,
+              'access',
+              true
+            ])
+          }
+        }
+      }
+      
+      return {
+        success: true,
+        device_id: deviceId,
+        message: `Successfully imported OLT configuration for ${deviceIp}`,
+        stats: {
+          vlans_imported: parsedConfig.vlans.length,
+          ports_imported: parsedConfig.ports.length,
+          subscribers_imported: parsedConfig.subscribers.length,
+          epon_ports: parsedConfig.eponPorts.length,
+          device_info: parsedConfig.device
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error importing OLT configuration:', error)
+      return {
+        success: false,
+        error: error.message,
+        message: `Failed to import OLT configuration for ${deviceIp}`
+      }
+    }
+  }
+  
+  /**
+   * Detect device type from configuration content
+   * @param {string} configText - Configuration text
+   * @returns {string} - Device type ('OLT', 'D-Link', 'Unknown')
+   */
+  static detectDeviceType(configText) {
+    const content = configText.toLowerCase()
+    
+    // OLT indicators
+    if (content.includes('epon bind-onu') || 
+        content.includes('interface epon') ||
+        content.includes('hostname olt') ||
+        content.includes('epon sla upstream') ||
+        /epon\d+\/\d+:\d+/.test(content)) {
+      return 'OLT'
+    }
+    
+    // D-Link switch indicators
+    if (content.includes('dgs-') || 
+        content.includes('des-') ||
+        content.includes('command: show config') ||
+        content.includes('d-link corporation') ||
+        content.includes('create vlan') && content.includes('tag')) {
+      return 'D-Link'
+    }
+    
+    // Cisco indicators (for future)
+    if (content.includes('cisco') || 
+        content.includes('version ') && content.includes('ios')) {
+      return 'Cisco'
+    }
+    
+    return 'Unknown'
+  }
+
   /**
    * Detect client type from MAC address and vendor
    * @param {string} macAddress - MAC address

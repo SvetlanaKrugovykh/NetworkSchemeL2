@@ -361,6 +361,94 @@ class NetworkController {
 
     return html
   }
+
+  /**
+   * Upload and import files
+   */
+  static async uploadFiles(request, reply) {
+    try {
+      const parts = request.parts()
+      let deviceIp = null
+      let configContent = null
+      let macContent = null
+      
+      // Process multipart form data
+      for await (const part of parts) {
+        if (part.type === 'field') {
+          if (part.fieldname === 'deviceIp') {
+            deviceIp = part.value
+          }
+        } else if (part.type === 'file') {
+          const content = await part.toBuffer()
+          const text = content.toString('utf8')
+          
+          if (part.fieldname === 'configFile') {
+            configContent = text
+          } else if (part.fieldname === 'macFile') {
+            macContent = text
+          }
+        }
+      }
+      
+      if (!deviceIp) {
+        return reply.code(400).send({
+          success: false,
+          error: 'Device IP is required'
+        })
+      }
+      
+      if (!configContent && !macContent) {
+        return reply.code(400).send({
+          success: false,
+          error: 'At least one file is required'
+        })
+      }
+      
+      const results = {}
+      
+      // Import configuration if provided
+      if (configContent) {
+        try {
+          results.config = await ImportService.importConfigAuto(configContent, deviceIp)
+        } catch (error) {
+          results.config = {
+            success: false,
+            error: error.message,
+            message: `Failed to import configuration for ${deviceIp}`
+          }
+        }
+      }
+      
+      // Import MAC table if provided
+      if (macContent) {
+        try {
+          results.mac = await ImportService.importMacTable(macContent, deviceIp, 'auto')
+        } catch (error) {
+          results.mac = {
+            success: false,
+            error: error.message,
+            message: `Failed to import MAC table for ${deviceIp}`
+          }
+        }
+      }
+      
+      // Check if at least one import was successful
+      const configSuccess = !results.config || results.config.success
+      const macSuccess = !results.mac || results.mac.success
+      
+      reply.send({
+        success: configSuccess && macSuccess,
+        message: 'File upload and import completed',
+        ...results
+      })
+      
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
 }
 
 module.exports = NetworkController

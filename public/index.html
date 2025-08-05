@@ -236,7 +236,30 @@
                 <h2>📁 Управление данными</h2>
                 <div class="grid">
                     <div class="card">
-                        <h3>🔄 Импорт данных</h3>
+                        <h3>� Импорт файлов</h3>
+                        <p>Загрузка конфигураций и MAC таблиц</p>
+                        
+                        <div class="input-group">
+                            <label for="deviceIp">IP устройства:</label>
+                            <input type="text" id="deviceIp" placeholder="192.168.1.1">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="configFile">Файл конфигурации (.cfg):</label>
+                            <input type="file" id="configFile" accept=".cfg,.txt,.conf">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="macFile">Файл MAC таблицы (.mac):</label>
+                            <input type="file" id="macFile" accept=".mac,.txt">
+                        </div>
+                        
+                        <button class="btn" onclick="uploadFiles()">Загрузить файлы</button>
+                        <div id="uploadStatus"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>�🔄 Импорт данных</h3>
                         <p>Импорт конфигураций и MAC таблиц из директории data/</p>
                         <button class="btn" onclick="importData()">Импортировать данные</button>
                         <div id="importStatus"></div>
@@ -329,6 +352,78 @@
                         </div>
                     `;
                     loadStats(); // Обновляем статистику
+                } else {
+                    statusDiv.innerHTML = `<span class="status error">Ошибка: ${result.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="status error">Ошибка: ${error.message}</span>`;
+            }
+        }
+
+        async function uploadFiles() {
+            const statusDiv = document.getElementById('uploadStatus');
+            const deviceIp = document.getElementById('deviceIp').value.trim();
+            const configFile = document.getElementById('configFile').files[0];
+            const macFile = document.getElementById('macFile').files[0];
+            
+            if (!deviceIp) {
+                statusDiv.innerHTML = '<span class="status error">Укажите IP адрес устройства</span>';
+                return;
+            }
+            
+            if (!configFile && !macFile) {
+                statusDiv.innerHTML = '<span class="status error">Выберите хотя бы один файл для загрузки</span>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<span class="status loading">Загрузка файлов...</span>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('deviceIp', deviceIp);
+                
+                if (configFile) {
+                    formData.append('configFile', configFile);
+                }
+                
+                if (macFile) {
+                    formData.append('macFile', macFile);
+                }
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let message = '<span class="status success">Файлы успешно загружены!</span><div class="log">';
+                    
+                    if (result.config) {
+                        message += `Конфигурация: ${result.config.message}<br>`;
+                        message += `Тип устройства: ${result.config.detected_type || 'Auto'}<br>`;
+                        if (result.config.stats) {
+                            message += `Портов: ${result.config.stats.ports_imported}, VLANs: ${result.config.stats.vlans_imported}<br>`;
+                        }
+                    }
+                    
+                    if (result.mac) {
+                        message += `MAC таблица: ${result.mac.message}<br>`;
+                        if (result.mac.stats) {
+                            message += `MAC записей: ${result.mac.stats.entries_imported}/${result.mac.stats.entries_processed}<br>`;
+                        }
+                    }
+                    
+                    message += '</div>';
+                    statusDiv.innerHTML = message;
+                    
+                    // Очищаем форму
+                    document.getElementById('configFile').value = '';
+                    document.getElementById('macFile').value = '';
+                    
+                    // Обновляем статистику
+                    loadStats();
                 } else {
                     statusDiv.innerHTML = `<span class="status error">Ошибка: ${result.error}</span>`;
                 }
