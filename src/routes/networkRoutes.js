@@ -25,10 +25,13 @@ async function networkRoutes(fastify, options) {
         import: 'POST /api/import',
         devices: 'GET /api/devices',
         device: 'GET /api/devices/:id',
+        devicePorts: 'GET /api/devices/:id/ports',
+        deviceVlans: 'GET /api/devices/:id/vlans',
         vlans: 'GET /api/vlans',
         vlanTopology: 'GET /api/vlans/:vlanId/topology',
         vlanMacs: 'GET /api/vlans/:vlanId/macs',
-        vlanScheme: 'GET /api/vlans/:vlanId/scheme'
+        vlanScheme: 'GET /api/vlans/:vlanId/scheme',
+        macStats: 'GET /api/stats/macs'
       }
     }
   })
@@ -38,10 +41,13 @@ async function networkRoutes(fastify, options) {
   
   // Data import
   fastify.post('/api/import', NetworkController.importData)
+  fastify.post('/api/import/directory', NetworkController.importData)
   
   // Devices
   fastify.get('/api/devices', NetworkController.getDevices)
   fastify.get('/api/devices/:id', NetworkController.getDevice)
+  fastify.get('/api/devices/:id/ports', NetworkController.getDevicePorts)
+  fastify.get('/api/devices/:id/vlans', NetworkController.getDeviceVlans)
   
   // VLANs
   fastify.get('/api/vlans', NetworkController.getVlans)

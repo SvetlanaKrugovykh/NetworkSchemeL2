@@ -1,16 +1,11 @@
 -- Network Scheme L2 Database Schema
 -- Updated to handle real L2 network topology with MAC duplicates
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS mac_addresses CASCADE;
-DROP TABLE IF EXISTS device_vlans CASCADE;
-DROP TABLE IF EXISTS device_ports CASCADE;
-DROP TABLE IF EXISTS device_configurations CASCADE;
-DROP TABLE IF EXISTS vlans CASCADE;
-DROP TABLE IF EXISTS devices CASCADE;
+-- Create tables only if they don't exist (preserves data)
+-- No DROP commands to prevent data loss
 
 -- Devices (switches, OLT)
-CREATE TABLE devices (
+CREATE TABLE IF NOT EXISTS devices (
     id SERIAL PRIMARY KEY,
     hostname VARCHAR(255),
     ip_address INET UNIQUE NOT NULL,
@@ -25,7 +20,7 @@ CREATE TABLE devices (
 );
 
 -- Device ports  
-CREATE TABLE device_ports (
+CREATE TABLE IF NOT EXISTS device_ports (
     id SERIAL PRIMARY KEY,
     device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
     port_number INTEGER NOT NULL,
@@ -41,7 +36,7 @@ CREATE TABLE device_ports (
 );
 
 -- VLAN configuration
-CREATE TABLE vlans (
+CREATE TABLE IF NOT EXISTS vlans (
     id SERIAL PRIMARY KEY,
     vlan_id INTEGER UNIQUE NOT NULL,
     name VARCHAR(255),
@@ -51,7 +46,7 @@ CREATE TABLE vlans (
 );
 
 -- VLAN on devices and ports
-CREATE TABLE device_vlans (
+CREATE TABLE IF NOT EXISTS device_vlans (
     id SERIAL PRIMARY KEY,
     device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
     port_id INTEGER REFERENCES device_ports(id) ON DELETE CASCADE,
@@ -66,7 +61,7 @@ CREATE TABLE device_vlans (
 );
 
 -- MAC addresses - REDESIGNED to handle duplicates across network path
-CREATE TABLE mac_addresses (
+CREATE TABLE IF NOT EXISTS mac_addresses (
     id SERIAL PRIMARY KEY,
     mac_address MACADDR NOT NULL,
     device_id INTEGER NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
@@ -88,7 +83,7 @@ CREATE TABLE mac_addresses (
 );
 
 -- Device configurations (history)
-CREATE TABLE device_configurations (
+CREATE TABLE IF NOT EXISTS device_configurations (
     id SERIAL PRIMARY KEY,
     device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
     config_text TEXT NOT NULL,
@@ -100,16 +95,16 @@ CREATE TABLE device_configurations (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_devices_ip ON devices(ip_address);
-CREATE INDEX idx_devices_type ON devices(device_type);
-CREATE INDEX idx_device_ports_device ON device_ports(device_id);
-CREATE INDEX idx_device_vlans_device ON device_vlans(device_id);
-CREATE INDEX idx_device_vlans_vlan ON device_vlans(vlan_id);
-CREATE INDEX idx_mac_addresses_mac ON mac_addresses(mac_address);
-CREATE INDEX idx_mac_addresses_device ON mac_addresses(device_id);
-CREATE INDEX idx_mac_addresses_vlan ON mac_addresses(vlan_id);
-CREATE INDEX idx_mac_addresses_source ON mac_addresses(is_source);
-CREATE INDEX idx_mac_addresses_ip ON mac_addresses(ip_address);
+CREATE INDEX IF NOT EXISTS idx_devices_ip ON devices(ip_address);
+CREATE INDEX IF NOT EXISTS idx_devices_type ON devices(device_type);
+CREATE INDEX IF NOT EXISTS idx_device_ports_device ON device_ports(device_id);
+CREATE INDEX IF NOT EXISTS idx_device_vlans_device ON device_vlans(device_id);
+CREATE INDEX IF NOT EXISTS idx_device_vlans_vlan ON device_vlans(vlan_id);
+CREATE INDEX IF NOT EXISTS idx_mac_addresses_mac ON mac_addresses(mac_address);
+CREATE INDEX IF NOT EXISTS idx_mac_addresses_device ON mac_addresses(device_id);
+CREATE INDEX IF NOT EXISTS idx_mac_addresses_vlan ON mac_addresses(vlan_id);
+CREATE INDEX IF NOT EXISTS idx_mac_addresses_source ON mac_addresses(is_source);
+CREATE INDEX IF NOT EXISTS idx_mac_addresses_ip ON mac_addresses(ip_address);
 
 -- Insert default VLANs
 INSERT INTO vlans (vlan_id, name, description, type) VALUES 
@@ -117,7 +112,7 @@ INSERT INTO vlans (vlan_id, name, description, type) VALUES
 (1002, 'management', 'Management VLAN', 'standard')
 ON CONFLICT (vlan_id) DO NOTHING;
 
--- Triggers for updated_at
+-- Triggers for updated_at (with safe creation)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -126,8 +121,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_devices_updated_at ON devices;
 CREATE TRIGGER update_devices_updated_at BEFORE UPDATE ON devices
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_mac_addresses_updated_at ON mac_addresses;
 CREATE TRIGGER update_mac_addresses_updated_at BEFORE UPDATE ON mac_addresses
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

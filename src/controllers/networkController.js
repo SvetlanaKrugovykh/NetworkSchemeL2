@@ -142,7 +142,7 @@ class NetworkController {
       const macAddresses = await VlanModel.getMacAddresses(parseInt(vlanId))
       
       // Generate HTML
-      const html = this.generateVlanHTML(topology, macAddresses)
+      const html = NetworkController.generateVlanHTML(topology, macAddresses)
       
       reply.type('text/html').send(html)
     } catch (error) {
@@ -442,6 +442,70 @@ class NetworkController {
         ...results
       })
       
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Get device ports
+   */
+  static async getDevicePorts(request, reply) {
+    try {
+      const { id } = request.params
+      const pool = require('../db/pool')
+      
+      const result = await pool.query(`
+        SELECT 
+          dp.id,
+          dp.port_name,
+          COUNT(ma.id) as mac_count
+        FROM device_ports dp
+        LEFT JOIN mac_addresses ma ON dp.id = ma.port_id
+        WHERE dp.device_id = $1
+        GROUP BY dp.id, dp.port_name
+        ORDER BY dp.port_name
+      `, [id])
+      
+      reply.send({
+        success: true,
+        data: result.rows
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Get device VLANs
+   */
+  static async getDeviceVlans(request, reply) {
+    try {
+      const { id } = request.params
+      const pool = require('../db/pool')
+      
+      const result = await pool.query(`
+        SELECT 
+          v.vlan_id,
+          v.name,
+          COUNT(ma.id) as mac_count
+        FROM vlans v
+        JOIN mac_addresses ma ON v.vlan_id = ma.vlan_id
+        WHERE ma.device_id = $1
+        GROUP BY v.vlan_id, v.name
+        ORDER BY v.vlan_id
+      `, [id])
+      
+      reply.send({
+        success: true,
+        data: result.rows
+      })
     } catch (error) {
       reply.code(500).send({
         success: false,

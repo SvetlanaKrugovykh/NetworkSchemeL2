@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scheme L2 - VLAN список</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #7c3aed, #6366f1);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .nav {
+            background: #f8fafc;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn.active {
+            background: #7c3aed;
+        }
+        
+        .nav-btn:hover {
+            background: #6366f1;
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .search-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #7c3aed;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .vlan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .vlan-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .vlan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .vlan-header {
+            background: linear-gradient(135deg, #7c3aed, #6366f1);
+            color: white;
+            padding: 20px;
+        }
+        
+        .vlan-id {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .vlan-body {
+            padding: 20px;
+        }
+        
+        .vlan-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        
+        .vlan-stat:not(:last-child) {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .vlan-actions {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #6366f1;
+        }
+        
+        .btn.secondary {
+            background: #64748b;
+        }
+        
+        .btn.secondary:hover {
+            background: #475569;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 VLAN список</h1>
+            <p>Обзор и управление виртуальными локальными сетями</p>
+        </div>
+        
+        <nav class="nav">
+            <div class="nav-buttons">
+                <a href="home.html" class="nav-btn">🏠 Главная</a>
+                <a href="import.html" class="nav-btn">📁 Импорт данных</a>
+                <a href="#" class="nav-btn active">🔗 VLAN список</a>
+                <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
+            </div>
+        </nav>
+        
+        <div class="content">
+            <!-- Поиск -->
+            <div class="search-card">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по VLAN ID или названию...">
+            </div>
+            
+            <!-- Статистика -->
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalVlans">-</div>
+                    <div class="stat-label">Всего VLAN</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMacs">-</div>
+                    <div class="stat-label">MAC адресов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDevices">-</div>
+                    <div class="stat-label">Устройств</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgMacsPerVlan">-</div>
+                    <div class="stat-label">Среднее MAC/VLAN</div>
+                </div>
+            </div>
+            
+            <!-- VLAN карточки -->
+            <div class="vlan-grid" id="vlanGrid">
+                <div class="loading">⏳ Загрузка VLAN данных...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allVlans = [];
+        
+        async function loadVlans() {
+            try {
+                const response = await fetch('/api/vlans');
+                const result = await response.json();
+                
+                if (result.success) {
+                    allVlans = result.data;
+                    displayVlans(allVlans);
+                    updateStats(allVlans);
+                } else {
+                    document.getElementById('vlanGrid').innerHTML = 
+                        '<div class="empty">❌ Ошибка загрузки VLAN: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('vlanGrid').innerHTML = 
+                    '<div class="empty">❌ Ошибка: ' + error.message + '</div>';
+            }
+        }
+        
+        function displayVlans(vlans) {
+            const grid = document.getElementById('vlanGrid');
+            
+            if (vlans.length === 0) {
+                grid.innerHTML = '<div class="empty">📭 VLAN не найдены</div>';
+                return;
+            }
+            
+            const vlanCards = vlans.map(vlan => `
+                <div class="vlan-card">
+                    <div class="vlan-header">
+                        <div class="vlan-id">VLAN ${vlan.vlan_id}</div>
+                        <div>${vlan.name || 'Без названия'}</div>
+                    </div>
+                    <div class="vlan-body">
+                        <div class="vlan-stat">
+                            <span>MAC адресов:</span>
+                            <span class="stat-value">${vlan.mac_count || 0}</span>
+                        </div>
+                        <div class="vlan-stat">
+                            <span>Устройств:</span>
+                            <span class="stat-value">${vlan.device_count || 0}</span>
+                        </div>
+                        <div class="vlan-stat">
+                            <span>Портов:</span>
+                            <span class="stat-value">${vlan.port_count || 0}</span>
+                        </div>
+                        <div class="vlan-stat">
+                            <span>Описание:</span>
+                            <span class="stat-value">${vlan.description || 'Не указано'}</span>
+                        </div>
+                    </div>
+                    <div class="vlan-actions">
+                        <button class="btn" onclick="showTopology(${vlan.vlan_id})">📊 Топология</button>
+                        <button class="btn secondary" onclick="generateScheme(${vlan.vlan_id})">🗺️ Схема</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            grid.innerHTML = vlanCards;
+        }
+        
+        function updateStats(vlans) {
+            const totalVlans = vlans.length;
+            const totalMacs = vlans.reduce((sum, vlan) => sum + (vlan.mac_count || 0), 0);
+            const totalDevices = vlans.reduce((sum, vlan) => sum + (vlan.device_count || 0), 0);
+            const avgMacs = totalVlans > 0 ? Math.round(totalMacs / totalVlans) : 0;
+            
+            document.getElementById('totalVlans').textContent = totalVlans;
+            document.getElementById('totalMacs').textContent = totalMacs.toLocaleString();
+            document.getElementById('totalDevices').textContent = totalDevices;
+            document.getElementById('avgMacsPerVlan').textContent = avgMacs;
+        }
+        
+        function filterVlans() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayVlans(allVlans);
+                return;
+            }
+            
+            const filtered = allVlans.filter(vlan => 
+                vlan.vlan_id.toString().includes(searchTerm) ||
+                (vlan.name && vlan.name.toLowerCase().includes(searchTerm)) ||
+                (vlan.description && vlan.description.toLowerCase().includes(searchTerm))
+            );
+            
+            displayVlans(filtered);
+        }
+        
+        async function showTopology(vlanId) {
+            try {
+                const response = await fetch(`/api/vlans/${vlanId}/topology`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Открываем новую вкладку с топологией
+                    const topologyWindow = window.open('', '_blank');
+                    topologyWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>VLAN ${vlanId} - Топология</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; padding: 20px; }
+                                    .device { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+                                    .device-name { font-weight: bold; color: #333; }
+                                    .port { margin-left: 20px; color: #666; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>VLAN ${vlanId} - Топология</h1>
+                                <div id="topology"></div>
+                                <script>
+                                    const data = ${JSON.stringify(result.data)};
+                                    const topologyDiv = document.getElementById('topology');
+                                    
+                                    data.forEach(device => {
+                                        const deviceDiv = document.createElement('div');
+                                        deviceDiv.className = 'device';
+                                        deviceDiv.innerHTML = '<div class="device-name">' + device.device_name + ' (' + device.device_ip + ')</div><div class="port">Порт: ' + device.port_name + ' - MAC адресов: ' + device.mac_count + '</div>';
+                                        topologyDiv.appendChild(deviceDiv);
+                                    });
+                                </script>
+                            </body>
+                        </html>
+                    `);
+                } else {
+                    alert('Ошибка загрузки топологии: ' + result.message);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        async function generateScheme(vlanId) {
+            try {
+                // Открываем схему в новой вкладке
+                window.open(`/api/vlans/${vlanId}/scheme`, '_blank');
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        // Поиск в реальном времени
+        document.getElementById('searchInput').addEventListener('input', filterVlans);
+        
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadVlans);
+    </script>
+</body>
+</html>

@@ -82,7 +82,7 @@ class VlanModel {
    */
   static async getTopology(vlanId) {
     const query = `
-      SELECT 
+      SELECT DISTINCT
         d.id as device_id,
         d.hostname,
         d.ip_address,
@@ -91,18 +91,22 @@ class VlanModel {
         dp.port_number,
         dp.port_name,
         dp.description as port_description,
-        dv.mode,
-        dv.native_vlan,
-        dv.qinq_enabled,
-        dv.outer_vlan,
-        dv.inner_vlan_id,
+        'access' as mode,
+        ma.vlan_id as native_vlan,
+        false as qinq_enabled,
+        null as outer_vlan,
+        null as inner_vlan_id,
         v.name as vlan_name,
-        v.description as vlan_description
-      FROM device_vlans dv
-      JOIN devices d ON dv.device_id = d.id
-      JOIN device_ports dp ON dv.port_id = dp.id
-      JOIN vlans v ON dv.vlan_id = v.vlan_id
-      WHERE dv.vlan_id = $1
+        v.description as vlan_description,
+        COUNT(ma.mac_address) as mac_count
+      FROM mac_addresses ma
+      JOIN devices d ON ma.device_id = d.id
+      JOIN device_ports dp ON ma.port_id = dp.id
+      JOIN vlans v ON ma.vlan_id = v.vlan_id
+      WHERE ma.vlan_id = $1
+      GROUP BY d.id, d.hostname, d.ip_address, d.device_type, 
+               dp.id, dp.port_number, dp.port_name, dp.description,
+               ma.vlan_id, v.name, v.description
       ORDER BY d.ip_address, dp.port_number
     `
     
@@ -138,7 +142,8 @@ class VlanModel {
         native_vlan: item.native_vlan,
         qinq_enabled: item.qinq_enabled,
         outer_vlan: item.outer_vlan,
-        inner_vlan_id: item.inner_vlan_id
+        inner_vlan_id: item.inner_vlan_id,
+        mac_count: item.mac_count
       })
     })
     
