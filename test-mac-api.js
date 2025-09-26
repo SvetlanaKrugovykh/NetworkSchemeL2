@@ -22,11 +22,11 @@ fetch(`${BASE_URL}/api/macs/${normalizedMac}`)
       console.log('✅ MAC найден:', data.data);
     } else {
       console.log('❌ MAC не найден');
-      
+
       // Попробуем найти частичное совпадение
       const partialMac = normalizedMac.substring(0, 6);
       console.log('🔍 Пробуем частичный поиск:', partialMac);
-      
+
       return fetch(`${BASE_URL}/api/macs/${partialMac}`);
     }
   })

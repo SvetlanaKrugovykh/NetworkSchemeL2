@@ -12,22 +12,22 @@ async function testMacSearch() {
   try {
     // Получаем несколько MAC адресов из базы
     console.log('🔍 Проверка формата MAC адресов в базе данных...\n');
-    
+
     const macSample = await pool.query('SELECT DISTINCT mac_address FROM mac_addresses LIMIT 5');
     console.log('Примеры MAC адресов в базе:');
     macSample.rows.forEach((row, index) => {
       console.log(`${index + 1}. ${row.mac_address}`);
     });
-    
+
     // Тестируем поиск с первым MAC адресом
     if (macSample.rows.length > 0) {
       const testMac = macSample.rows[0].mac_address;
       console.log(`\n🔎 Тестируем поиск MAC: ${testMac}`);
-      
+
       // Нормализуем MAC адрес как в коде
       const normalizedMac = testMac.replace(/[:-]/g, '').toLowerCase();
       console.log(`Нормализованный MAC: ${normalizedMac}`);
-      
+
       // Проверяем поиск
       const searchQuery = `
         SELECT
@@ -43,10 +43,10 @@ async function testMacSearch() {
         WHERE LOWER(REPLACE(REPLACE(ma.mac_address, ':', ''), '-', '')) = $1
         LIMIT 3
       `;
-      
+
       const searchResult = await pool.query(searchQuery, [normalizedMac]);
       console.log(`\n📊 Результат поиска: найдено ${searchResult.rows.length} записей`);
-      
+
       if (searchResult.rows.length > 0) {
         searchResult.rows.forEach((row, index) => {
           console.log(`\nЗапись ${index + 1}:`);
@@ -57,13 +57,13 @@ async function testMacSearch() {
         });
       } else {
         console.log('❌ MAC не найден при поиске!');
-        
+
         // Проверим прямой поиск
         const directSearch = await pool.query('SELECT * FROM mac_addresses WHERE mac_address = $1 LIMIT 1', [testMac]);
         console.log(`\n🔍 Прямой поиск: найдено ${directSearch.rows.length} записей`);
       }
     }
-    
+
     await pool.end();
     process.exit(0);
   } catch (error) {

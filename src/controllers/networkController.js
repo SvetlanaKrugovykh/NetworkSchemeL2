@@ -678,7 +678,7 @@ class NetworkController {
 
       // Normalize MAC address (remove : and - symbols, convert to lowercase)
       let normalizedMac = macAddress.replace(/[:-\s]/g, '').toLowerCase()
-      
+
       const query = `
         SELECT
           ma.mac_address,
