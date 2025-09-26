@@ -51,7 +51,7 @@ class IPAccessControl {
     try {
       const isIPv6 = ip.includes(':')
       const isNetworkIPv6 = network.includes(':')
-      
+
       if (isIPv6 !== isNetworkIPv6) {
         return false // Different IP versions
       }
@@ -64,7 +64,7 @@ class IPAccessControl {
         const ipInt = this.ipToInt(ip)
         const networkInt = this.ipToInt(network)
         const mask = (-1 << (32 - prefixLength)) >>> 0
-        
+
         return (ipInt & mask) === (networkInt & mask)
       }
     } catch (error) {
@@ -101,8 +101,8 @@ class IPAccessControl {
 
     for (const allowedIP of this.allowedIPs) {
       if (allowedIP.type === 'single') {
-        if (clientIP === allowedIP.ip || 
-            (allowedIP.ip === '127.0.0.1' && clientIP === '::1')) {
+        if (clientIP === allowedIP.ip ||
+          (allowedIP.ip === '127.0.0.1' && clientIP === '::1')) {
           return true
         }
       } else if (allowedIP.type === 'cidr') {
@@ -121,7 +121,7 @@ class IPAccessControl {
   middleware() {
     return async (request, reply) => {
       const clientIP = request.ip || request.connection.remoteAddress || request.headers['x-forwarded-for']
-      
+
       if (!this.isAllowed(clientIP)) {
         console.warn(`🚫 Access denied for IP: ${clientIP}`)
         reply.code(403).send({
