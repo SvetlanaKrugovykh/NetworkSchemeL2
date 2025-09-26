@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Scheme L2 - Устройства</title>
+    <title>Network Scheme L2 - Пристрої</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #059669, #10b981);
+            background: linear-gradient(135deg, #0f172a, #334155);
             color: white;
             padding: 30px;
             text-align: center;
@@ -60,11 +60,11 @@
         }
         
         .nav-btn.active {
-            background: #10b981;
+            background: #334155;
         }
         
         .nav-btn:hover {
-            background: #059669;
+            background: #0f172a;
             transform: translateY(-2px);
         }
         
@@ -109,7 +109,7 @@
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
-            color: #10b981;
+            color: #334155;
             margin-bottom: 5px;
         }
         
@@ -139,7 +139,7 @@
         }
         
         .device-header {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #334155, #0f172a);
             color: white;
             padding: 20px;
         }
@@ -260,48 +260,48 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🖥️ Устройства</h1>
-            <p>Управление сетевыми устройствами и их портами</p>
+            <h1>🖥️ Пристрої</h1>
+            <p>Управління мережевими пристроями та їх портами</p>
         </div>
         
         <nav class="nav">
             <div class="nav-buttons">
-                <a href="home.html" class="nav-btn">🏠 Главная</a>
-                <a href="import.html" class="nav-btn">📁 Импорт данных</a>
+                <a href="home.html" class="nav-btn">🏠 Головна</a>
+                <a href="import.html" class="nav-btn">📁 Імпорт даних</a>
                 <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
-                <a href="#" class="nav-btn active">🖥️ Устройства</a>
+                <a href="#" class="nav-btn active">🖥️ Пристрої</a>
             </div>
         </nav>
         
         <div class="content">
             <!-- Поиск -->
             <div class="search-card">
-                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по имени устройства или IP адресу...">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Пошук за назвою пристрою або IP адресою...">
             </div>
             
             <!-- Статистика -->
             <div class="stats" id="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="totalDevices">-</div>
-                    <div class="stat-label">Всего устройств</div>
+                    <div class="stat-label">Всього пристроїв</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="totalPorts">-</div>
-                    <div class="stat-label">Всего портов</div>
+                    <div class="stat-label">Всього портів</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="totalMacs">-</div>
-                    <div class="stat-label">MAC адресов</div>
+                    <div class="stat-number" id="totalVlans">-</div>
+                    <div class="stat-label">VLAN</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="avgPortsPerDevice">-</div>
-                    <div class="stat-label">Среднее портов/устройство</div>
+                    <div class="stat-label">Середнє портів/пристрій</div>
                 </div>
             </div>
             
-            <!-- Устройства -->
+            <!-- Пристрої -->
             <div class="device-grid" id="deviceGrid">
-                <div class="loading">⏳ Загрузка данных об устройствах...</div>
+                <div class="loading">⏳ Завантаження даних про пристрої...</div>
             </div>
         </div>
     </div>
@@ -321,11 +321,11 @@
                     updateStats(allDevices);
                 } else {
                     document.getElementById('deviceGrid').innerHTML = 
-                        '<div class="empty">❌ Ошибка загрузки устройств: ' + result.message + '</div>';
+                        '<div class="empty">❌ Помилка завантаження пристроїв: ' + result.message + '</div>';
                 }
             } catch (error) {
                 document.getElementById('deviceGrid').innerHTML = 
-                    '<div class="empty">❌ Ошибка: ' + error.message + '</div>';
+                    '<div class="empty">❌ Помилка: ' + error.message + '</div>';
             }
         }
         
@@ -350,13 +350,11 @@
             const grid = document.getElementById('deviceGrid');
             
             if (devices.length === 0) {
-                grid.innerHTML = '<div class="empty">📭 Устройства не найдены</div>';
+                grid.innerHTML = '<div class="empty">📭 Пристрої не знайдені</div>';
                 return;
             }
             
             const deviceCards = devices.map(device => {
-                const totalMacs = device.ports ? device.ports.reduce((sum, port) => sum + (port.mac_count || 0), 0) : 0;
-                
                 const portsHtml = device.ports && device.ports.length > 0 ? 
                     device.ports.map(port => `
                         <div class="port-item">
@@ -364,34 +362,34 @@
                             <span class="port-macs">${port.mac_count || 0} MAC</span>
                         </div>
                     `).join('') : 
-                    '<div class="port-item"><span style="color: #9ca3af;">Порты не найдены</span></div>';
+                    '<div class="port-item"><span style="color: #9ca3af;">Порти не знайдені</span></div>';
                 
                 return `
                     <div class="device-card">
                         <div class="device-header">
-                            <div class="device-name">${device.hostname || device.name || 'Неизвестное устройство'}</div>
+                            <div class="device-name">${device.hostname || device.name || 'Невідомий пристрій'}</div>
                             <div class="device-ip">${device.ip_address || device.ip}</div>
                         </div>
                         <div class="device-body">
                             <div class="device-stat">
-                                <span>Портов:</span>
+                                <span>Портів:</span>
                                 <span class="stat-value">${device.ports ? device.ports.length : 0}</span>
                             </div>
                             <div class="device-stat">
-                                <span>MAC адресов:</span>
-                                <span class="stat-value">${totalMacs}</span>
-                            </div>
-                            <div class="device-stat">
                                 <span>Тип:</span>
-                                <span class="stat-value">${device.device_type || 'Не указан'}</span>
+                                <span class="stat-value">${device.device_type || 'Не вказано'}</span>
                             </div>
                             <div class="device-stat">
                                 <span>Статус:</span>
                                 <span class="stat-value">✅ Активно</span>
                             </div>
+                            <div class="device-stat">
+                                <span>Модель:</span>
+                                <span class="stat-value">${device.model || 'Не вказано'}</span>
+                            </div>
                         </div>
                         <div class="ports-section">
-                            <div class="ports-title">Порты устройства:</div>
+                            <div class="ports-title">Порти пристрою:</div>
                             <div class="port-list">
                                 ${portsHtml}
                             </div>
@@ -407,17 +405,26 @@
             grid.innerHTML = deviceCards;
         }
         
-        function updateStats(devices) {
+        async function updateStats(devices) {
             const totalDevices = devices.length;
             const totalPorts = devices.reduce((sum, device) => sum + (device.ports ? device.ports.length : 0), 0);
-            const totalMacs = devices.reduce((sum, device) => {
-                return sum + (device.ports ? device.ports.reduce((portSum, port) => portSum + (port.mac_count || 0), 0) : 0);
-            }, 0);
             const avgPorts = totalDevices > 0 ? Math.round(totalPorts / totalDevices) : 0;
+            
+            // Получаем количество VLAN
+            let totalVlans = 0;
+            try {
+                const response = await fetch('/api/vlans');
+                const result = await response.json();
+                if (result.success) {
+                    totalVlans = result.data.length;
+                }
+            } catch (error) {
+                console.error('Error loading VLANs:', error);
+            }
             
             document.getElementById('totalDevices').textContent = totalDevices;
             document.getElementById('totalPorts').textContent = totalPorts;
-            document.getElementById('totalMacs').textContent = totalMacs.toLocaleString();
+            document.getElementById('totalVlans').textContent = totalVlans;
             document.getElementById('avgPortsPerDevice').textContent = avgPorts;
         }
         
@@ -449,15 +456,15 @@
                 device.ports.map(port => `
                     <div class="port">
                         <div class="port-name">${port.port_name}</div>
-                        <div class="port-stats">MAC адресов: ${port.mac_count || 0}</div>
+                        <div class="port-stats">MAC адрес: ${port.mac_count || 0}</div>
                     </div>
                 `).join('') :
-                '<p style="color: #9ca3af;">Порты не найдены</p>';
+                '<p style="color: #9ca3af;">Порти не знайдені</p>';
             
             detailsWindow.document.write(`
                 <html lang="ru">
                     <head>
-                        <title>Устройство ${device.hostname || device.name || 'Неизвестное'}</title>
+                        <title>Пристрій ${device.hostname || device.name || 'Невідомий'}</title>
                         <style>
                             body { 
                                 font-family: Arial, sans-serif; 
@@ -491,12 +498,12 @@
                     </head>
                     <body>
                         <div class="device-info">
-                            <h1>🖥️ ${device.hostname || device.name || 'Неизвестное устройство'}</h1>
+                            <h1>🖥️ ${device.hostname || device.name || 'Невідомий пристрій'}</h1>
                             <p><strong>IP адрес:</strong> ${device.ip_address || device.ip}</p>
-                            <p><strong>Тип:</strong> ${device.device_type || 'Не указан'}</p>
-                            <p><strong>Портов:</strong> ${device.ports ? device.ports.length : 0}</p>
+                            <p><strong>Тип:</strong> ${device.device_type || 'Не вказан'}</p>
+                            <p><strong>Портів:</strong> ${device.ports ? device.ports.length : 0}</p>
                         </div>
-                        <h2>Порты устройства:</h2>
+                        <h2>Порти пристрою:</h2>
                         <div id="ports">${portsHtml}</div>
                     </body>
                 </html>
@@ -516,7 +523,7 @@
                         result.data.map(vlan => `
                             <div class="vlan">
                                 <div class="vlan-id">VLAN ${vlan.vlan_id}</div>
-                                <div class="vlan-stats">MAC адресов: ${vlan.mac_count || 0}</div>
+                                <div class="vlan-stats">MAC адрес: ${vlan.mac_count || 0}</div>
                             </div>
                         `).join('') :
                         '<p style="color: #9ca3af;">VLAN не найдены</p>';
@@ -524,7 +531,7 @@
                     vlanWindow.document.write(`
                         <html lang="ru">
                             <head>
-                                <title>VLAN устройства ${device ? (device.hostname || device.name) : deviceId}</title>
+                                <title>VLAN пристрою ${device ? (device.hostname || device.name) : deviceId}</title>
                                 <style>
                                     body { font-family: Arial, sans-serif; padding: 20px; }
                                     .vlan { margin: 10px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
@@ -533,7 +540,7 @@
                                 </style>
                             </head>
                             <body>
-                                <h1>VLAN устройства ${device ? (device.hostname || device.name) : deviceId}</h1>
+                                <h1>VLAN пристрою ${device ? (device.hostname || device.name) : deviceId}</h1>
                                 <div id="vlans">${vlansHtml}</div>
                             </body>
                         </html>
