@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Network Scheme L2 - Импорт данных</title>
+  <title>Network Scheme L2 - Імпорт даних</title>
   <style>
     * {
       margin: 0;
@@ -178,14 +178,14 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>📁 Импорт данных</h1>
+      <h1>📁 Імпорт даних</h1>
       <p>Загрузка MAC таблиц и конфигураций устройств</p>
     </div>
 
     <nav class="nav">
       <div class="nav-buttons">
         <a href="home.html" class="nav-btn">🏠 Главная</a>
-        <a href="#" class="nav-btn active">📁 Импорт данных</a>
+        <a href="#" class="nav-btn active">📁 Імпорт даних</a>
         <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
         <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
       </div>
@@ -194,7 +194,7 @@
     <div class="content">
       <!-- MAC таблицы -->
       <div class="card">
-        <h3>📊 Импорт MAC таблиц</h3>
+        <h3>📊 Імпорт MAC таблиць</h3>
         <p style="color: #64748b; margin-bottom: 20px;">
           Поддерживаемые форматы: D-Link Switch, Cisco/OLT. Автоматическое определение формата.
         </p>
@@ -209,19 +209,19 @@
           <input type="file" id="macFile" accept=".mac,.txt" multiple>
         </div>
 
-        <button class="btn success" onclick="uploadMacTable()">Импортировать MAC таблицу</button>
-        <button class="btn" onclick="clearResults()">Очистить результаты</button>
+        <button class="btn success" onclick="uploadMacTable()">Імпортувати MAC таблицю</button>
+        <button class="btn" onclick="clearResults()">Очистити результати</button>
       </div>
 
-      <!-- Пакетный импорт -->
+      <!-- Пакетний імпорт -->
       <div class="card">
-        <h3>📦 Пакетный импорт</h3>
+        <h3>📦 Пакетний імпорт</h3>
         <p style="color: #64748b; margin-bottom: 20px;">
-          Импорт всех файлов из директории data/macs с автоматическим извлечением IP из имени файла.
+          Імпорт всіх файлів з директорії data/macs з автоматичним вилученням IP з імені файлу.
         </p>
 
-        <button class="btn success" onclick="importFromDirectory()">Импортировать из директории</button>
-        <button class="btn" onclick="testImport()">Тестовый импорт</button>
+        <button class="btn success" onclick="importFromDirectory()">Імпортувати з директорії</button>
+        <button class="btn" onclick="testImport()">Тестовий імпорт</button>
       </div>
 
       <!-- Полная перезагрузка -->
@@ -239,7 +239,7 @@
 
       <!-- Результаты -->
       <div class="card">
-        <h3>📝 Результаты импорта</h3>
+        <h3>📝 Результати імпорту</h3>
         <div class="results" id="results">
           <p style="color: #64748b;">Результаты операций будут отображаться здесь...</p>
         </div>
@@ -268,7 +268,7 @@
         formData.append('macFile', macFile);
         formData.append('deviceIp', deviceIp);
 
-        resultsDiv.innerHTML = '<div class="status">⏳ Импорт в процессе...</div>';
+        resultsDiv.innerHTML = '<div class="status">⏳ Імпорт в процесі...</div>';
 
         const response = await fetch('/api/upload', {
           method: 'POST',
@@ -279,11 +279,11 @@
 
         if (result.success) {
           resultsDiv.innerHTML = `
-                        <div class="status success">✅ Импорт завершен успешно</div>
+                        <div class="status success">✅ Імпорт завершено успішно</div>
                         <div class="file-info">
-                            <h4>Статистика импорта:</h4>
+                            <h4>Статистика імпорту:</h4>
                             <p>📊 Обработано записей: ${result.stats?.entries_processed || 0}</p>
-                            <p>✅ Импортировано: ${result.stats?.entries_imported || 0}</p>
+                            <p>✅ Імпортовано: ${result.stats?.entries_imported || 0}</p>
                             <p>❌ Ошибок: ${result.stats?.entries_failed || 0}</p>
                             <p>🔗 VLAN найдено: ${result.stats?.vlans_analyzed || 0}</p>
                         </div>
@@ -300,7 +300,7 @@
       const resultsDiv = document.getElementById('results');
 
       try {
-        resultsDiv.innerHTML = '<div class="status">⏳ Пакетный импорт в процессе...</div>';
+        resultsDiv.innerHTML = '<div class="status">⏳ Пакетний імпорт в процесі...</div>';
 
         const response = await fetch('/api/import/directory', {
           method: 'POST',
@@ -314,12 +314,12 @@
 
         if (result.success) {
           resultsDiv.innerHTML = `
-                        <div class="status success">✅ Пакетный импорт завершен</div>
+                        <div class="status success">✅ Пакетний імпорт завершено</div>
                         <div class="file-info">
                             <h4>Результаты:</h4>
                             <p>📁 Файлов обработано: ${result.stats?.files_processed || 0}</p>
                             <p>🖥️ Устройств создано: ${result.stats?.devices_created || 0}</p>
-                            <p>📊 MAC адресов импортировано: ${result.stats?.total_macs || 0}</p>
+                            <p>📊 MAC адрес імпортовано: ${result.stats?.total_macs || 0}</p>
                             <p>🔗 VLAN найдено: ${result.stats?.total_vlans || 0}</p>
                         </div>
                     `;
@@ -335,7 +335,7 @@
       const resultsDiv = document.getElementById('results');
 
       try {
-        resultsDiv.innerHTML = '<div class="status">⏳ Тестирование импорта...</div>';
+        resultsDiv.innerHTML = '<div class="status">⏳ Тестування імпорту...</div>';
 
         // Простой тест API
         const response = await fetch('/api/devices');

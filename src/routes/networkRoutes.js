@@ -64,6 +64,9 @@ async function networkRoutes(fastify, options) {
   fastify.get('/api/stats/macs', NetworkController.getMacStats)
   fastify.get('/api/stats', NetworkController.getStats)
 
+  // MAC address search
+  fastify.get('/api/macs/:macAddress', NetworkController.findMacAddress)
+
   // HTML scheme generation
   fastify.get('/api/vlans/:vlanId/scheme', NetworkController.generateVlanScheme)
 

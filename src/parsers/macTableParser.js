@@ -6,12 +6,9 @@ class MacTableParser {
   
   /**
    * Parse D-Link MAC address table format
-   * Example format:
-   * Command: show fdb
-   * VLAN ID  MAC Address         Port        Type
-   * ------- ----------------- ----------- ------------
-   * 1        00-11-22-33-44-55   1          Dynamic
-   * 100      AA-BB-CC-DD-EE-FF   5          Static
+   * Supports multiple D-Link formats:
+   * Format 1: VID | VLAN Name | MAC Address | Port | Type
+   * Format 2: VID | VLAN Name | MAC Address | Port | Type | Status
    */
   static parseDlinkMacTable(content, deviceInfo = null) {
     const lines = content.split('\n').map(line => line.trim())
@@ -20,23 +17,41 @@ class MacTableParser {
     let parsingTable = false
     
     for (const line of lines) {
-      // Start parsing after the header separator
-      if (line.includes('-------')) {
+      // Skip control characters, ANSI sequences and terminal control lines
+      if (line.includes('CTRL+C') || line.includes('ESC') || line.includes('\x1B') ||
+          line.includes('--More--') || line.includes('Quit') || line.includes('Next Page') ||
+          line.startsWith('[') || line.length === 0 || line.includes('Total Entries')) {
+        continue
+      }
+      
+      // Start parsing after the header separator (both --- and ---- formats)
+      if (line.includes('-------') || line.includes('----')) {
         parsingTable = true
         continue
       }
       
-      if (!parsingTable || !line || line.startsWith('Command:')) {
+      if (!parsingTable || !line || line.startsWith('Command:') || line.includes('Aging Time')) {
         continue
       }
       
+      // Clean line from ANSI escape sequences
+      const cleanLine = line.replace(/\x1B\[[0-9;]*[A-Za-z]/g, '').replace(/\x1B\[[K]/g, '')
+      
       // Parse the MAC table entry
-      const parts = line.split(/\s+/)
-      if (parts.length >= 4) {
+      const parts = cleanLine.split(/\s+/)
+      
+      // Handle both 5-column and 6-column formats
+      if (parts.length >= 5) {
         const vlanId = parseInt(parts[0])
-        const macAddress = this.normalizeMacAddress(parts[1])
-        const port = parts[2]
-        const type = parts[3]
+        const vlanName = parts[1] // VLAN Name (skip)
+        const macAddress = this.normalizeMacAddress(parts[2])
+        const port = parts[3]
+        const type = parts[4]
+        
+        // Skip CPU/Self entries
+        if (port === 'CPU' || type === 'Self') {
+          continue
+        }
         
         if (this.isValidMacAddress(macAddress) && !isNaN(vlanId)) {
           macEntries.push({
@@ -46,7 +61,7 @@ class MacTableParser {
             learning_method: type.toLowerCase(),
             vendor: this.getMacVendor(macAddress),
             device_info: deviceInfo,
-            raw_line: line,
+            raw_line: cleanLine,
             // Initialize topology fields - will be calculated by TopologyAnalyzer
             is_source: null,
             hop_count: null
@@ -122,114 +137,32 @@ class MacTableParser {
   }
   
   /**
-   * Parse D-Link switch MAC address table format
-   * Example format:
-   * Command: show fdb
-   * VID  VLAN Name                        MAC Address       Port Type
-   * ---- -------------------------------- ----------------- ---- ---------------
-   * 1    default                          C0-A0-BB-D4-D7-D1 CPU  Self
-   * 80   80                               00-14-A9-26-5C-31 25   Dynamic
-   */
-  static parseDlinkSwitchMacTable(content, deviceInfo = null) {
-    const lines = content.split('\n').map(line => line.trim())
-    const macEntries = []
-    
-    let parsingTable = false
-    
-    for (const line of lines) {
-      // Skip control characters and quit prompts
-      if (line.includes('CTRL+C') || line.includes('[K') || 
-          line.includes('Quit') || line.includes('[1m') ||
-          line.startsWith('[') || line.length === 0) {
-        continue
-      }
-      
-      // Start parsing after the header separator
-      if (line.includes('---- ') && line.includes('-')) {
-        parsingTable = true
-        continue
-      }
-      
-      if (!parsingTable || line.includes('Command:') || line.includes('VID') || 
-          line.includes('VLAN Name')) {
-        continue
-      }
-      
-      // Parse the MAC table entry - D-Link format
-      const parts = line.split(/\s+/)
-      if (parts.length >= 5) {
-        const vlanId = parseInt(parts[0])
-        const vlanName = parts[1] // Skip VLAN name  
-        const macAddress = this.normalizeMacAddress(parts[2])
-        const port = parts[3]
-        const type = parts[4] || 'Dynamic'
-        
-        // Skip CPU/Self entries
-        if (port === 'CPU' || type === 'Self') {
-          continue
-        }
-        
-        if (this.isValidMacAddress(macAddress) && !isNaN(vlanId)) {
-          macEntries.push({
-            vlan_id: vlanId,
-            mac_address: macAddress,
-            port: port,
-            learning_method: type.toLowerCase(),
-            vendor: this.getMacVendor(macAddress),
-            device_info: deviceInfo,
-            raw_line: line,
-            // Initialize topology fields - will be calculated by TopologyAnalyzer
-            is_source: null,
-            hop_count: null
-          })
-        }
-      }
-    }
-    
-    return macEntries
-  }
-  
-  /**
    * Auto-detect MAC table format and parse accordingly
    */
   static parseGenericMacTable(content, deviceInfo = null) {
     const lines = content.split('\n')
     
-    // Check for OLT format indicators (with total count and specific headers)
+    // Check for Cisco/OLT format indicators (with total count and specific headers)
     if (content.includes('Mac Address Table (Total') || 
         (content.includes('Vlan') && content.includes('Mac Address') && 
          content.includes('Type') && content.includes('Ports') &&
-         lines.some(line => line.includes('xxxx.xxxx.xxxx') || /\d{4}\.\d{4}\.\d{4}/.test(line)))) {
+         lines.some(line => /\d{4}\.\d{4}\.\d{4}/.test(line)))) {
       return this.parseOltMacTable(content, deviceInfo)
     }
     
-    // Check for D-Link switch format indicators
-    if (content.includes('Command: show fdb') && content.includes('VID')) {
-      return this.parseDlinkSwitchMacTable(content, deviceInfo)
-    }
-    
-    // Check for standard D-Link format indicators
-    if (content.includes('Command: show fdb') || 
-        lines.some(line => line.includes('Type') && line.includes('Port') && line.includes('MAC Address'))) {
+    // Check for D-Link format indicators (Command: show fdb with VID column)
+    if (content.includes('Command: show fdb') && 
+        (content.includes('VID') || content.includes('VLAN Name'))) {
       return this.parseDlinkMacTable(content, deviceInfo)
     }
     
-    // Check for Cisco format indicators
-    if (lines.some(line => line.includes('VLAN') && line.includes('MAC Address') && line.includes('Ports'))) {
+    // Check for other Cisco format indicators
+    if (content.includes('Mac Address Table') && 
+        content.includes('Vlan') && content.includes('Ports')) {
       return this.parseOltMacTable(content, deviceInfo)
     }
     
-    // Try formats in order of specificity
-    let result = this.parseOltMacTable(content, deviceInfo)
-    if (result.length > 0) {
-      return result
-    }
-    
-    result = this.parseDlinkSwitchMacTable(content, deviceInfo)
-    if (result.length > 0) {
-      return result
-    }
-    
+    // Try D-Link format as fallback
     return this.parseDlinkMacTable(content, deviceInfo)
   }
   

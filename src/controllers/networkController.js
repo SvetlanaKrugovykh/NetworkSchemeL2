@@ -563,7 +563,7 @@ class NetworkController {
     try {
       const pool = require('../db/pool')
 
-      // Удаляем данные в правильном порядке (учитывая внешние ключи)
+      // Delete data in correct order (considering foreign keys)
       await pool.query('DELETE FROM mac_addresses')
       await pool.query('DELETE FROM device_vlans')
       await pool.query('DELETE FROM device_ports')
@@ -571,7 +571,7 @@ class NetworkController {
       await pool.query('DELETE FROM devices')
       await pool.query('DELETE FROM vlans')
 
-      // Сбрасываем последовательности
+      // Reset sequences
       await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
@@ -598,7 +598,7 @@ class NetworkController {
     try {
       const pool = require('../db/pool')
 
-      // Очищаем базу данных
+      // Clear database
       await pool.query('DELETE FROM mac_addresses')
       await pool.query('DELETE FROM device_vlans')
       await pool.query('DELETE FROM device_ports')
@@ -606,7 +606,7 @@ class NetworkController {
       await pool.query('DELETE FROM devices')
       await pool.query('DELETE FROM vlans')
 
-      // Сбрасываем последовательности
+      // Reset sequences
       await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
@@ -614,7 +614,7 @@ class NetworkController {
       await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
 
-      // Импортируем новые данные
+      // Import new data
       const dataDir = path.join(process.cwd(), 'data')
       const results = await ImportService.importFromDirectory(dataDir)
 
@@ -659,6 +659,46 @@ class NetworkController {
           macs: parseInt(macs.rows[0].count),
           ports: parseInt(ports.rows[0].count)
         }
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Find MAC address in network
+   */
+  static async findMacAddress(request, reply) {
+    try {
+      const { macAddress } = request.params
+      const pool = require('../db/pool')
+      
+      // Normalize MAC address (remove : and - symbols)
+      const normalizedMac = macAddress.replace(/[:-]/g, '').toLowerCase()
+      
+      const query = `
+        SELECT 
+          ma.mac_address,
+          ma.vlan_id,
+          ma.vlan_mode,
+          d.ip_address as device_ip,
+          d.hostname as device_hostname,
+          dp.port_name
+        FROM mac_addresses ma
+        JOIN devices d ON ma.device_id = d.id
+        JOIN device_ports dp ON ma.port_id = dp.id
+        WHERE LOWER(REPLACE(REPLACE(ma.mac_address, ':', ''), '-', '')) = $1
+        ORDER BY d.ip_address, dp.port_name
+      `
+      
+      const result = await pool.query(query, [normalizedMac])
+      
+      reply.send({
+        success: true,
+        data: result.rows
       })
     } catch (error) {
       reply.code(500).send({
