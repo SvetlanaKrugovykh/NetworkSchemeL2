@@ -301,7 +301,7 @@ class NetworkController {
                 <div class="stat-label">Ports</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">${macAddresses.length}</div>
+                <div class="stat-number">${new Set(macAddresses.map(mac => mac.mac_address)).size}</div>
                 <div class="stat-label">MAC Addresses</div>
             </div>
         </div>
@@ -689,7 +689,7 @@ class NetworkController {
         FROM mac_addresses ma
         LEFT JOIN devices d ON ma.device_id = d.id
         LEFT JOIN device_ports dp ON ma.port_id = dp.id
-        WHERE LOWER(REPLACE(REPLACE(ma.mac_address, ':', ''), '-', '')) = $1
+        WHERE LOWER(REGEXP_REPLACE(ma.mac_address::text, '[:-]', '', 'g')) = $1
         ORDER BY d.ip_address, dp.port_name
         LIMIT 10
       `
