@@ -4,13 +4,13 @@ function debugMacFile() {
   try {
     const content = fs.readFileSync('data/macs/192_168_156_110.mac', 'utf8')
     const lines = content.split('\n')
-    
+
     console.log('Total lines:', lines.length)
     console.log('\n=== First 15 lines ===')
     lines.slice(0, 15).forEach((line, index) => {
       console.log(`${index + 1}: "${line.trim()}" (length: ${line.length})`)
     })
-    
+
     console.log('\n=== Looking for separators ===')
     lines.forEach((line, index) => {
       const trimmed = line.trim()
@@ -18,7 +18,7 @@ function debugMacFile() {
         console.log(`Line ${index + 1}: "${trimmed}" (SEPARATOR FOUND)`)
       }
     })
-    
+
     console.log('\n=== Looking for data lines ===')
     let foundSeparator = false
     lines.forEach((line, index) => {
@@ -36,7 +36,7 @@ function debugMacFile() {
         }
       }
     })
-    
+
   } catch (error) {
     console.error('Error:', error)
   }

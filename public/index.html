@@ -209,7 +209,7 @@
     .nav-card:hover {
       border-color: #4a90e2;
       transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
     .nav-card .btn {
@@ -277,13 +277,13 @@
             <p>Імпорт конфігурацій, MAC таблиць та управління базою даних</p>
             <a href="/import.html" class="btn">Перейти до управління →</a>
           </div>
-          
+
           <div class="card nav-card">
             <h3>🖥️ Пристрої</h3>
             <p>Перегляд та аналіз мережевих пристроїв</p>
             <a href="/devices.html" class="btn">Переглянути пристрої →</a>
           </div>
-          
+
           <div class="card nav-card">
             <h3>🌐 VLAN топологія</h3>
             <p>Інтерактивний перегляд VLAN та їх зв'язків</p>
@@ -319,41 +319,41 @@
           <div class="card">
             <h3>� Пошук MAC адреси</h3>
             <p>Знайти де знаходиться MAC адреса в мережі</p>
-            
+
             <div class="input-group">
               <label for="macSearch">MAC адреса:</label>
               <input type="text" id="macSearch" placeholder="xx:xx:xx:xx:xx:xx або xxxxxxxxxxxx">
             </div>
-            
+
             <button class="btn" onclick="searchMacAddress()">Знайти MAC</button>
             <div id="macSearchResults"></div>
           </div>
-          
+
           <div class="card">
             <h3>� Статистика VLAN</h3>
             <p>Детальна інформація про конкретний VLAN</p>
-            
+
             <div class="input-group">
               <label for="vlanStatsId">VLAN ID:</label>
               <input type="number" id="vlanStatsId" placeholder="Введіть ID VLAN">
             </div>
-            
+
             <button class="btn" onclick="showVlanStats()">Показати статистику</button>
             <div id="vlanStatsResults"></div>
           </div>
         </div>
       </div>
-        </div>
-      </div>
-
-      <!-- Результаты -->
-      <div class="section">
-        <h2>📝 Результаты</h2>
-        <div id="results">
-          <p>Результаты операций будут отображаться здесь...</p>
-        </div>
-      </div>
     </div>
+  </div>
+
+  <!-- Результаты -->
+  <div class="section">
+    <h2>📝 Результаты</h2>
+    <div id="results">
+      <p>Результаты операций будут отображаться здесь...</p>
+    </div>
+  </div>
+  </div>
   </div>
 
   <script>
@@ -391,10 +391,10 @@
 
       try {
         resultsDiv.innerHTML = '<span class="status loading">Пошук...</span>';
-        
+
         // Нормалізуємо MAC адресу
         const normalizedMac = macAddress.replace(/[:-]/g, '').toLowerCase();
-        
+
         const response = await fetch(`/api/macs/${normalizedMac}`);
         const result = await response.json();
 
@@ -432,7 +432,7 @@
 
       try {
         resultsDiv.innerHTML = '<span class="status loading">Завантаження...</span>';
-        
+
         const [topology, macs] = await Promise.all([
           fetch(`/api/vlans/${vlanId}/topology`).then(r => r.json()),
           fetch(`/api/vlans/${vlanId}/macs`).then(r => r.json())
@@ -441,7 +441,7 @@
         if (topology.success && macs.success) {
           const deviceCount = topology.data.devices?.length || 0;
           const macCount = macs.data?.length || 0;
-          
+
           let html = `
             <div class="log">
               <h4>VLAN ${vlanId} - ${topology.data.vlan_name || 'Unknown'}</h4>
@@ -456,7 +456,7 @@
                 </button>
               </div>
             </div>`;
-          
+
           resultsDiv.innerHTML = html;
         } else {
           resultsDiv.innerHTML = '<span class="status error">VLAN не знайдено</span>';

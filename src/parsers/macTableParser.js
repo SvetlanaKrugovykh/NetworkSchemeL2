@@ -3,7 +3,7 @@
  * Supports L2 network topology analysis with source/transit detection
  */
 class MacTableParser {
-  
+
   /**
    * Parse D-Link MAC address table format
    * Supports multiple D-Link formats:
@@ -13,33 +13,33 @@ class MacTableParser {
   static parseDlinkMacTable(content, deviceInfo = null) {
     const lines = content.split('\n').map(line => line.trim())
     const macEntries = []
-    
+
     let parsingTable = false
-    
+
     for (const line of lines) {
       // Skip control characters, ANSI sequences and terminal control lines
       if (line.includes('CTRL+C') || line.includes('ESC') || line.includes('\x1B') ||
-          line.includes('--More--') || line.includes('Quit') || line.includes('Next Page') ||
-          line.startsWith('[') || line.length === 0 || line.includes('Total Entries')) {
+        line.includes('--More--') || line.includes('Quit') || line.includes('Next Page') ||
+        line.startsWith('[') || line.length === 0 || line.includes('Total Entries')) {
         continue
       }
-      
+
       // Start parsing after the header separator (both --- and ---- formats)
       if (line.includes('-------') || line.includes('----')) {
         parsingTable = true
         continue
       }
-      
+
       if (!parsingTable || !line || line.startsWith('Command:') || line.includes('Aging Time')) {
         continue
       }
-      
+
       // Clean line from ANSI escape sequences
       const cleanLine = line.replace(/\x1B\[[0-9;]*[A-Za-z]/g, '').replace(/\x1B\[[K]/g, '')
-      
+
       // Parse the MAC table entry
       const parts = cleanLine.split(/\s+/)
-      
+
       // Handle both 5-column and 6-column formats
       if (parts.length >= 5) {
         const vlanId = parseInt(parts[0])
@@ -47,12 +47,12 @@ class MacTableParser {
         const macAddress = this.normalizeMacAddress(parts[2])
         const port = parts[3]
         const type = parts[4]
-        
+
         // Skip CPU/Self entries
         if (port === 'CPU' || type === 'Self') {
           continue
         }
-        
+
         if (this.isValidMacAddress(macAddress) && !isNaN(vlanId)) {
           macEntries.push({
             vlan_id: vlanId,
@@ -69,10 +69,10 @@ class MacTableParser {
         }
       }
     }
-    
+
     return macEntries
   }
-  
+
   /**
    * Parse OLT MAC address table format (Cisco-style but with different port formats)
    * Example format:
@@ -86,28 +86,28 @@ class MacTableParser {
   static parseOltMacTable(content, deviceInfo = null) {
     const lines = content.split('\n').map(line => line.trim())
     const macEntries = []
-    
+
     let parsingTable = false
-    
+
     for (const line of lines) {
       // Skip control characters and --More-- lines
-      if (line.includes('--More--') || line.includes('CTRL+C') || 
-          line.includes('[K') || line.includes('[1A') ||
-          line.startsWith('[') || line.length === 0) {
+      if (line.includes('--More--') || line.includes('CTRL+C') ||
+        line.includes('[K') || line.includes('[1A') ||
+        line.startsWith('[') || line.length === 0) {
         continue
       }
-      
+
       // Start parsing after the header separator
       if (line.includes('----') || line.includes('--')) {
         parsingTable = true
         continue
       }
-      
-      if (!parsingTable || line.includes('Mac Address Table') || 
-          line.includes('Vlan') || line.includes('VID')) {
+
+      if (!parsingTable || line.includes('Mac Address Table') ||
+        line.includes('Vlan') || line.includes('VID')) {
         continue
       }
-      
+
       // Parse the MAC table entry - handle both formats
       const parts = line.split(/\s+/)
       if (parts.length >= 4) {
@@ -115,7 +115,7 @@ class MacTableParser {
         const macAddress = this.normalizeMacAddress(parts[1])
         const type = parts[2]
         const port = parts[3]
-        
+
         if (this.isValidMacAddress(macAddress) && !isNaN(vlanId)) {
           macEntries.push({
             vlan_id: vlanId,
@@ -132,40 +132,40 @@ class MacTableParser {
         }
       }
     }
-    
+
     return macEntries
   }
-  
+
   /**
    * Auto-detect MAC table format and parse accordingly
    */
   static parseGenericMacTable(content, deviceInfo = null) {
     const lines = content.split('\n')
-    
+
     // Check for Cisco/OLT format indicators (with total count and specific headers)
-    if (content.includes('Mac Address Table (Total') || 
-        (content.includes('Vlan') && content.includes('Mac Address') && 
-         content.includes('Type') && content.includes('Ports') &&
-         lines.some(line => /\d{4}\.\d{4}\.\d{4}/.test(line)))) {
+    if (content.includes('Mac Address Table (Total') ||
+      (content.includes('Vlan') && content.includes('Mac Address') &&
+        content.includes('Type') && content.includes('Ports') &&
+        lines.some(line => /\d{4}\.\d{4}\.\d{4}/.test(line)))) {
       return this.parseOltMacTable(content, deviceInfo)
     }
-    
+
     // Check for D-Link format indicators (Command: show fdb with VID column)
-    if (content.includes('Command: show fdb') && 
-        (content.includes('VID') || content.includes('VLAN Name'))) {
+    if (content.includes('Command: show fdb') &&
+      (content.includes('VID') || content.includes('VLAN Name'))) {
       return this.parseDlinkMacTable(content, deviceInfo)
     }
-    
+
     // Check for other Cisco format indicators
-    if (content.includes('Mac Address Table') && 
-        content.includes('Vlan') && content.includes('Ports')) {
+    if (content.includes('Mac Address Table') &&
+      content.includes('Vlan') && content.includes('Ports')) {
       return this.parseOltMacTable(content, deviceInfo)
     }
-    
+
     // Try D-Link format as fallback
     return this.parseDlinkMacTable(content, deviceInfo)
   }
-  
+
   /**
    * Parse MAC table with enhanced context for topology analysis
    * @param {string} content - Raw MAC table content
@@ -173,7 +173,7 @@ class MacTableParser {
    */
   static parseWithTopologyContext(content, context = {}) {
     const entries = this.parseGenericMacTable(content, context.deviceInfo)
-    
+
     // Enhance entries with port context if available
     if (context.portMappings) {
       entries.forEach(entry => {
@@ -186,39 +186,39 @@ class MacTableParser {
         }
       })
     }
-    
+
     return entries
   }
-  
+
   /**
    * Normalize MAC address to standard format (lowercase with colons)
    * Supports multiple input formats: xx:xx:xx:xx:xx:xx, xx-xx-xx-xx-xx-xx, xxxx.xxxx.xxxx
    */
   static normalizeMacAddress(macStr) {
     if (!macStr) return null
-    
+
     // Remove all separators and convert to lowercase
     const cleanMac = macStr.replace(/[-:\.]/g, '').toLowerCase()
-    
+
     // Validate length (should be 12 hex characters)
     if (cleanMac.length !== 12 || !/^[0-9a-f]{12}$/.test(cleanMac)) {
       return null
     }
-    
+
     // Add colons every 2 characters
     return cleanMac.match(/.{2}/g).join(':')
   }
-  
+
   /**
    * Validate MAC address format
    */
   static isValidMacAddress(macStr) {
     if (!macStr) return false
-    
+
     const macPattern = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i
     return macPattern.test(macStr)
   }
-  
+
   /**
    * Extract vendor information from MAC address (OUI lookup)
    */
@@ -226,9 +226,9 @@ class MacTableParser {
     if (!this.isValidMacAddress(macAddress)) {
       return null
     }
-    
+
     const oui = macAddress.split(':').slice(0, 3).join(':').toUpperCase()
-    
+
     // Extended OUI mappings for network equipment identification
     const ouiMap = {
       '00:11:22': 'D-Link',
@@ -283,10 +283,10 @@ class MacTableParser {
       '00:24:81': 'HP',
       '00:25:B3': 'HP'
     }
-    
+
     return ouiMap[oui] || 'Unknown'
   }
-  
+
   /**
    * Analyze MAC address patterns to help identify device types
    * @param {Array} macEntries - Array of MAC entries
@@ -300,23 +300,23 @@ class MacTableParser {
       ports: {},
       learning_methods: {}
     }
-    
+
     macEntries.forEach(entry => {
       // Count vendors
       const vendor = entry.vendor || 'Unknown'
       analysis.vendors[vendor] = (analysis.vendors[vendor] || 0) + 1
-      
+
       // Count VLANs
       analysis.vlans[entry.vlan_id] = (analysis.vlans[entry.vlan_id] || 0) + 1
-      
+
       // Count ports
       analysis.ports[entry.port] = (analysis.ports[entry.port] || 0) + 1
-      
+
       // Count learning methods
       const method = entry.learning_method || 'unknown'
       analysis.learning_methods[method] = (analysis.learning_methods[method] || 0) + 1
     })
-    
+
     return analysis
   }
 }

@@ -675,12 +675,12 @@ class NetworkController {
     try {
       const { macAddress } = request.params
       const pool = require('../db/pool')
-      
+
       // Normalize MAC address (remove : and - symbols)
       const normalizedMac = macAddress.replace(/[:-]/g, '').toLowerCase()
-      
+
       const query = `
-        SELECT 
+        SELECT
           ma.mac_address,
           ma.vlan_id,
           ma.vlan_mode,
@@ -693,9 +693,9 @@ class NetworkController {
         WHERE LOWER(REPLACE(REPLACE(ma.mac_address, ':', ''), '-', '')) = $1
         ORDER BY d.ip_address, dp.port_name
       `
-      
+
       const result = await pool.query(query, [normalizedMac])
-      
+
       reply.send({
         success: true,
         data: result.rows
