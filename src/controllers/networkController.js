@@ -676,34 +676,37 @@ class NetworkController {
       const { macAddress } = request.params
       const pool = require('../db/pool')
 
-      // Normalize MAC address (remove : and - symbols)
-      const normalizedMac = macAddress.replace(/[:-]/g, '').toLowerCase()
-
+      // Normalize MAC address (remove : and - symbols, convert to lowercase)
+      let normalizedMac = macAddress.replace(/[:-\s]/g, '').toLowerCase()
+      
       const query = `
         SELECT
           ma.mac_address,
           ma.vlan_id,
-          ma.vlan_mode,
           d.ip_address as device_ip,
           d.hostname as device_hostname,
           dp.port_name
         FROM mac_addresses ma
-        JOIN devices d ON ma.device_id = d.id
-        JOIN device_ports dp ON ma.port_id = dp.id
+        LEFT JOIN devices d ON ma.device_id = d.id
+        LEFT JOIN device_ports dp ON ma.port_id = dp.id
         WHERE LOWER(REPLACE(REPLACE(ma.mac_address, ':', ''), '-', '')) = $1
         ORDER BY d.ip_address, dp.port_name
+        LIMIT 10
       `
 
       const result = await pool.query(query, [normalizedMac])
 
       reply.send({
         success: true,
-        data: result.rows
+        data: result.rows,
+        message: result.rows.length > 0 ? `Found ${result.rows.length} entries` : 'MAC address not found'
       })
     } catch (error) {
+      console.error('❌ MAC search error:', error)
       reply.code(500).send({
         success: false,
-        error: error.message
+        error: error.message,
+        message: 'Error searching MAC address'
       })
     }
   }

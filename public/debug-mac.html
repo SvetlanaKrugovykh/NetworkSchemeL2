@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MAC Search Debug</title>
+</head>
+<body>
+    <h1>MAC Search Debug</h1>
+    
+    <div>
+        <label>MAC Address:</label>
+        <input type="text" id="macInput" value="00:22:6b:88:fe:0b">
+        <button onclick="searchMac()">Search</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function searchMac() {
+            const mac = document.getElementById('macInput').value.trim();
+            const normalizedMac = mac.replace(/[:-]/g, '').toLowerCase();
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = `<p>Searching for: ${mac}</p><p>Normalized: ${normalizedMac}</p>`;
+            
+            try {
+                const response = await fetch(`/api/macs/${normalizedMac}`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML += `<h3>Response:</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+                if (!response.ok) {
+                    resultDiv.innerHTML += `<p style="color: red;">HTTP Status: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

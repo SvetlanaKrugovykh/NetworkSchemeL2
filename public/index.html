@@ -403,10 +403,9 @@
           result.data.forEach(entry => {
             html += `
               <div class="mac-result">
-                <strong>Пристрій:</strong> ${entry.device_ip} (${entry.device_hostname || 'Unknown'})<br>
-                <strong>Порт:</strong> ${entry.port_name}<br>
-                <strong>VLAN:</strong> ${entry.vlan_id}<br>
-                <strong>Тип:</strong> ${entry.vlan_mode || 'Unknown'}
+                <strong>Пристрій:</strong> ${entry.device_ip || 'Unknown'} (${entry.device_hostname || 'Unknown'})<br>
+                <strong>Порт:</strong> ${entry.port_name || 'Unknown'}<br>
+                <strong>VLAN:</strong> ${entry.vlan_id || 'Unknown'}
               </div>`;
           });
           html += '</div>';
