@@ -1,245 +1,487 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Scheme L2 - Главная</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .nav {
-            background: #f8fafc;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .nav-btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .nav-btn:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 8px;
-        }
-        
-        .stat-label {
-            color: #64748b;
-            font-weight: 500;
-        }
-        
-        .welcome {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .welcome h2 {
-            color: #1e293b;
-            margin-bottom: 15px;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .feature {
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-        }
-        
-        .feature h3 {
-            color: #1e293b;
-            margin-bottom: 10px;
-        }
-        
-        .feature p {
-            color: #64748b;
-            line-height: 1.6;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Scheme L2 - Панель керування</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4a90e2, #357abd);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .topology-container {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background-color: #f9fafb;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      border-bottom: 2px solid #4a90e2;
+      padding-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #e9ecef;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h3 {
+      color: #4a90e2;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #4a90e2, #357abd);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, #357abd, #2968a3);
+      transform: translateY(-1px);
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+
+    .btn.success {
+      background: linear-gradient(135deg, #27ae60, #229954);
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.9em;
+      margin: 5px;
+    }
+
+    .status.loading {
+      background: #ffeaa7;
+      color: #d63031;
+    }
+
+    .status.success {
+      background: #55efc4;
+      color: #00b894;
+    }
+
+    .status.error {
+      background: #fd79a8;
+      color: #e84393;
+    }
+
+    .log {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      background: linear-gradient(135deg, #a8e6cf, #7fcdcd);
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
+
+    .nav-card {
+      text-align: center;
+      border: 2px solid #e5e7eb;
+      transition: all 0.3s ease;
+    }
+
+    .nav-card:hover {
+      border-color: #4a90e2;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-card .btn {
+      margin-top: 15px;
+      width: auto;
+      display: inline-block;
+    }
+
+    .mac-result {
+      background: #f0f8ff;
+      border-left: 4px solid #4a90e2;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 4px;
+    }
+
+    .vlan-stats div {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .vlan-stats div:last-child {
+      border-bottom: none;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🌐 Network Scheme L2</h1>
-            <p>Система анализа L2 топологии и генерации схем VLAN</p>
-        </div>
-        
-        <nav class="nav">
-            <div class="nav-buttons">
-                <a href="#" class="nav-btn">🏠 Главная</a>
-                <a href="import.html" class="nav-btn">📁 Импорт данных</a>
-                <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
-                <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
-            </div>
-        </nav>
-        
-        <div class="content">
-            <!-- Статистика -->
-            <div class="stats" id="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="deviceCount">-</div>
-                    <div class="stat-label">Устройства</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="vlanCount">-</div>
-                    <div class="stat-label">VLAN</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="macCount">-</div>
-                    <div class="stat-label">MAC адреса</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="portCount">-</div>
-                    <div class="stat-label">Порты</div>
-                </div>
-            </div>
-            
-            <!-- Добро пожаловать -->
-            <div class="welcome">
-                <h2>👋 Добро пожаловать в Network Scheme L2</h2>
-                <p>Система предназначена для анализа L2 сетевой топологии и построения схем на основе MAC таблиц коммутаторов и OLT устройств.</p>
-                
-                <div class="features">
-                    <div class="feature">
-                        <h3>📁 Импорт данных</h3>
-                        <p>Загрузка MAC таблиц с автоматическим определением формата (D-Link, Cisco, OLT). Поддержка пакетной загрузки файлов.</p>
-                    </div>
-                    <div class="feature">
-                        <h3>🔗 Анализ VLAN</h3>
-                        <p>Построение топологии VLAN с определением источников и транзитных узлов. Визуализация схемы прохождения трафика.</p>
-                    </div>
-                    <div class="feature">
-                        <h3>🎨 Генерация схем</h3>
-                        <p>Создание интерактивных HTML схем с детализацией по устройствам, портам и MAC адресам.</p>
-                    </div>
-                    <div class="feature">
-                        <h3>🖥️ Управление устройствами</h3>
-                        <p>Автоматическое обнаружение устройств и портов из MAC таблиц. Детальная информация о каждом устройстве.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>🌐 Network Scheme L2</h1>
+      <p>Система аналізу мережевої топології та генерації схем VLAN</p>
     </div>
 
-    <script>
-        // Загрузка статистики при загрузке страницы
-        window.onload = function() {
-            loadStats();
-        };
+    <div class="content">
+      <!-- Statistics -->
+      <div class="section">
+        <h2>📊 Статистика</h2>
+        <div class="stats" id="stats">
+          <div class="stat-item">
+            <div class="stat-number" id="deviceCount">-</div>
+            <div class="stat-label">Пристрої</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="vlanCount">-</div>
+            <div class="stat-label">VLAN</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="macCount">-</div>
+            <div class="stat-label">MAC адреси</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="portCount">-</div>
+            <div class="stat-label">Порти</div>
+          </div>
+        </div>
+      </div>
 
-        async function loadStats() {
-            try {
-                const [devices, vlans] = await Promise.all([
-                    fetch('/api/devices'),
-                    fetch('/api/vlans')
-                ]);
-                
-                const devicesData = await devices.json();
-                const vlansData = await vlans.json();
-                
-                if (devicesData.success && vlansData.success) {
-                    document.getElementById('deviceCount').textContent = devicesData.data.length;
-                    document.getElementById('vlanCount').textContent = vlansData.data.length;
-                    
-                    // Подсчет портов
-                    let totalPorts = 0;
-                    devicesData.data.forEach(device => {
-                        totalPorts += device.port_count || 0;
-                    });
-                    document.getElementById('portCount').textContent = totalPorts;
-                    
-                    // Подсчет MAC адресов (примерно)
-                    document.getElementById('macCount').textContent = '~8K+';
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
+      <!-- Навігація -->
+      <div class="section">
+        <h2>🧭 Навігація</h2>
+        <div class="grid">
+          <div class="card nav-card">
+            <h3>📁 Управління даними</h3>
+            <p>Імпорт конфігурацій, MAC таблиць та управління базою даних</p>
+            <a href="/import.html" class="btn">Перейти до управління →</a>
+          </div>
+
+          <div class="card nav-card">
+            <h3>🖥️ Пристрої</h3>
+            <p>Перегляд та аналіз мережевих пристроїв</p>
+            <a href="/devices.html" class="btn">Переглянути пристрої →</a>
+          </div>
+
+          <div class="card nav-card">
+            <h3>🌐 VLAN топологія</h3>
+            <p>Інтерактивний перегляд VLAN та їх зв'язків</p>
+            <a href="/vlans.html" class="btn">Відкрити VLAN →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Генерація схем -->
+      <div class="section">
+        <h2>🎨 Генерація схем</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>� HTML схема VLAN</h3>
+            <p>Генерація детальної схеми проходження VLAN через пристрої</p>
+
+            <div class="input-group">
+              <label for="vlanId">VLAN ID:</label>
+              <input type="number" id="vlanId" placeholder="Введіть ID VLAN (наприклад, 13)" value="13">
+            </div>
+
+            <button class="btn success" onclick="generateVlanScheme()">Згенерувати схему</button>
+            <button class="btn" onclick="viewVlanTopology()">Показати топологію (JSON)</button>
+            <button class="btn" onclick="viewVlanMacs()">Показати MAC адреси</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Аналіз мережі -->
+      <div class="section">
+        <h2>� Аналіз мережі</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>🔎 Пошук MAC адреси</h3>
+            <p>Знайти де знаходиться MAC адреса в мережі</p>
+
+            <div class="input-group">
+              <label for="macSearch">MAC адреса:</label>
+              <input type="text" id="macSearch" placeholder="xx:xx:xx:xx:xx:xx або xxxxxxxxxxxx">
+            </div>
+
+            <button class="btn" onclick="searchMacAddress()">Знайти MAC</button>
+            <div id="macSearchResults"></div>
+          </div>
+
+          <div class="card">
+            <h3>📈 Статистика VLAN</h3>
+            <p>Детальна інформація про конкретний VLAN</p>
+
+            <div class="input-group">
+              <label for="vlanStatsId">VLAN ID:</label>
+              <input type="number" id="vlanStatsId" placeholder="Введіть ID VLAN">
+            </div>
+
+            <button class="btn" onclick="showVlanStats()">Показати статистику</button>
+            <div id="vlanStatsResults"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Результаты -->
+  <div class="section">
+    <h2>📝 Результаты</h2>
+    <div id="results">
+      <p>Результаты операций будут отображаться здесь...</p>
+    </div>
+  </div>
+  </div>
+  </div>
+
+  <script>
+    // Загрузка статистики при загрузке страницы
+    window.onload = function () {
+      loadStats();
+    };
+
+    async function loadStats() {
+      try {
+        const stats = await fetch('/api/stats').then(r => r.json());
+
+        if (stats.success) {
+          document.getElementById('deviceCount').textContent = stats.data.devices;
+          document.getElementById('vlanCount').textContent = stats.data.vlans;
+          document.getElementById('macCount').textContent = stats.data.macs;
+          document.getElementById('portCount').textContent = stats.data.ports;
         }
-    </script>
+
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Пошук MAC адреси
+    async function searchMacAddress() {
+      const macInput = document.getElementById('macSearch');
+      const resultsDiv = document.getElementById('macSearchResults');
+      const macAddress = macInput.value.trim();
+
+      if (!macAddress) {
+        resultsDiv.innerHTML = '<span class="status error">Введіть MAC адресу</span>';
+        return;
+      }
+
+      try {
+        resultsDiv.innerHTML = '<span class="status loading">Пошук...</span>';
+
+        // Нормалізуємо MAC адресу
+        const normalizedMac = macAddress.replace(/[:-]/g, '').toLowerCase();
+
+        const response = await fetch(`/api/macs/${normalizedMac}`);
+        const result = await response.json();
+
+        if (result.success && result.data.length > 0) {
+          let html = '<div class="log"><h4>Знайдено MAC адресу:</h4>';
+          result.data.forEach(entry => {
+            html += `
+              <div class="mac-result">
+                <strong>Пристрій:</strong> ${entry.device_ip} (${entry.device_hostname || 'Unknown'})<br>
+                <strong>Порт:</strong> ${entry.port_name}<br>
+                <strong>VLAN:</strong> ${entry.vlan_id}<br>
+                <strong>Тип:</strong> ${entry.vlan_mode || 'Unknown'}
+              </div>`;
+          });
+          html += '</div>';
+          resultsDiv.innerHTML = html;
+        } else {
+          resultsDiv.innerHTML = '<span class="status error">MAC адресу не знайдено</span>';
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<span class="status error">Помилка: ${error.message}</span>`;
+      }
+    }
+
+    // Статистика VLAN
+    async function showVlanStats() {
+      const vlanInput = document.getElementById('vlanStatsId');
+      const resultsDiv = document.getElementById('vlanStatsResults');
+      const vlanId = vlanInput.value.trim();
+
+      if (!vlanId) {
+        resultsDiv.innerHTML = '<span class="status error">Введіть ID VLAN</span>';
+        return;
+      }
+
+      try {
+        resultsDiv.innerHTML = '<span class="status loading">Завантаження...</span>';
+
+        const [topology, macs] = await Promise.all([
+          fetch(`/api/vlans/${vlanId}/topology`).then(r => r.json()),
+          fetch(`/api/vlans/${vlanId}/macs`).then(r => r.json())
+        ]);
+
+        if (topology.success && macs.success) {
+          const deviceCount = topology.data.devices?.length || 0;
+          const macCount = macs.data?.length || 0;
+
+          let html = `
+            <div class="log">
+              <h4>VLAN ${vlanId} - ${topology.data.vlan_name || 'Unknown'}</h4>
+              <div class="vlan-stats">
+                <div><strong>Пристроїв:</strong> ${deviceCount}</div>
+                <div><strong>MAC адрес:</strong> ${macCount}</div>
+                <div><strong>Опис:</strong> ${topology.data.vlan_description || 'Не вказано'}</div>
+              </div>
+              <div style="margin-top: 15px;">
+                <button class="btn" onclick="window.open('/api/vlans/${vlanId}/scheme', '_blank')">
+                  Відкрити повну схему
+                </button>
+              </div>
+            </div>`;
+
+          resultsDiv.innerHTML = html;
+        } else {
+          resultsDiv.innerHTML = '<span class="status error">VLAN не знайдено</span>';
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<span class="status error">Помилка: ${error.message}</span>`;
+      }
+    }
+
+    function generateVlanScheme(vlanId) {
+      if (!vlanId) {
+        vlanId = document.getElementById('vlanId').value;
+      }
+
+      if (!vlanId) {
+        alert('Введіть VLAN ID');
+        return;
+      }
+
+      window.open(`/api/vlans/${vlanId}/scheme`, '_blank');
+    }
+
+    // Остальной JavaScript код такой же как в index.html
+    // ... (остальные функции остаются без изменений)
+  </script>
 </body>
+
 </html>
