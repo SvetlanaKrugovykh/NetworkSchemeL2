@@ -42,23 +42,29 @@ class VlanModel {
     const query = `
       SELECT
         v.*,
-        COALESCE(mac_stats.mac_count, 0) as mac_count,
-        COALESCE(device_stats.device_count, 0) as device_count
+        COALESCE(CAST(mac_stats.mac_count AS INTEGER), 0) as mac_count,
+        COALESCE(CAST(mac_stats.device_count AS INTEGER), 0) as device_count
       FROM vlans v
       LEFT JOIN (
-        SELECT vlan_id, COUNT(DISTINCT mac_address) as mac_count
+        SELECT 
+          vlan_id, 
+          COUNT(DISTINCT mac_address) as mac_count,
+          COUNT(DISTINCT device_id) as device_count
         FROM mac_addresses
         GROUP BY vlan_id
       ) mac_stats ON v.vlan_id = mac_stats.vlan_id
-      LEFT JOIN (
-        SELECT vlan_id, COUNT(DISTINCT device_id) as device_count
-        FROM device_vlans
-        GROUP BY vlan_id
-      ) device_stats ON v.vlan_id = device_stats.vlan_id
       ORDER BY v.vlan_id
     `
     const result = await pool.query(query)
-    return result.rows
+    
+    // Дополнительная проверка данных
+    const cleanedRows = result.rows.map(row => ({
+      ...row,
+      mac_count: Math.max(0, parseInt(row.mac_count) || 0),
+      device_count: Math.max(0, parseInt(row.device_count) || 0)
+    }))
+    
+    return cleanedRows
   }
 
   /**

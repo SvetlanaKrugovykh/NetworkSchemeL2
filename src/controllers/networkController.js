@@ -565,7 +565,6 @@ class NetworkController {
 
       // Delete data in correct order (considering foreign keys)
       await pool.query('DELETE FROM mac_addresses')
-      await pool.query('DELETE FROM device_vlans')
       await pool.query('DELETE FROM device_ports')
       await pool.query('DELETE FROM device_configurations')
       await pool.query('DELETE FROM devices')
@@ -576,7 +575,6 @@ class NetworkController {
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
-      await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
 
       reply.send({
@@ -600,7 +598,6 @@ class NetworkController {
 
       // Clear database
       await pool.query('DELETE FROM mac_addresses')
-      await pool.query('DELETE FROM device_vlans')
       await pool.query('DELETE FROM device_ports')
       await pool.query('DELETE FROM device_configurations')
       await pool.query('DELETE FROM devices')
@@ -611,7 +608,6 @@ class NetworkController {
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
-      await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
 
       // Import new data

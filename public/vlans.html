@@ -335,12 +335,21 @@
     function updateStats(vlans) {
       const totalVlans = vlans.length;
       const totalMacs = vlans.reduce((sum, vlan) => sum + (vlan.mac_count || 0), 0);
-      const totalDevices = vlans.reduce((sum, vlan) => sum + (vlan.device_count || 0), 0);
       const avgMacs = totalVlans > 0 ? Math.round(totalMacs / totalVlans) : 0;
 
       document.getElementById('totalVlans').textContent = totalVlans;
       document.getElementById('totalMacs').textContent = totalMacs.toLocaleString();
-      document.getElementById('totalDevices').textContent = totalDevices;
+      
+      // Загружаем корректную статистику устройств из API
+      fetch('/api/stats')
+        .then(r => r.json())
+        .then(stats => {
+          if (stats.success) {
+            document.getElementById('totalDevices').textContent = stats.data.devices || 0;
+          }
+        })
+        .catch(() => document.getElementById('totalDevices').textContent = '?');
+        
       document.getElementById('avgMacsPerVlan').textContent = avgMacs;
     }
 

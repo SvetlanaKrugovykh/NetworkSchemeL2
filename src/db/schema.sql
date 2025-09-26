@@ -45,21 +45,6 @@ CREATE TABLE IF NOT EXISTS vlans (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- VLAN on devices and ports
-CREATE TABLE IF NOT EXISTS device_vlans (
-    id SERIAL PRIMARY KEY,
-    device_id INTEGER REFERENCES devices(id) ON DELETE CASCADE,
-    port_id INTEGER REFERENCES device_ports(id) ON DELETE CASCADE,
-    vlan_id INTEGER REFERENCES vlans(vlan_id),
-    mode VARCHAR(20) NOT NULL, -- 'access', 'trunk', 'tagged', 'untagged'
-    native_vlan BOOLEAN DEFAULT FALSE,
-    qinq_enabled BOOLEAN DEFAULT FALSE,
-    outer_vlan INTEGER,
-    inner_vlan_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(device_id, port_id, vlan_id, mode)
-);
-
 -- MAC addresses - REDESIGNED to handle duplicates across network path
 CREATE TABLE IF NOT EXISTS mac_addresses (
     id SERIAL PRIMARY KEY,
@@ -98,8 +83,6 @@ CREATE TABLE IF NOT EXISTS device_configurations (
 CREATE INDEX IF NOT EXISTS idx_devices_ip ON devices(ip_address);
 CREATE INDEX IF NOT EXISTS idx_devices_type ON devices(device_type);
 CREATE INDEX IF NOT EXISTS idx_device_ports_device ON device_ports(device_id);
-CREATE INDEX IF NOT EXISTS idx_device_vlans_device ON device_vlans(device_id);
-CREATE INDEX IF NOT EXISTS idx_device_vlans_vlan ON device_vlans(vlan_id);
 CREATE INDEX IF NOT EXISTS idx_mac_addresses_mac ON mac_addresses(mac_address);
 CREATE INDEX IF NOT EXISTS idx_mac_addresses_device ON mac_addresses(device_id);
 CREATE INDEX IF NOT EXISTS idx_mac_addresses_vlan ON mac_addresses(vlan_id);
