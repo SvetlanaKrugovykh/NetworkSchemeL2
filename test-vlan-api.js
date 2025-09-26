@@ -6,7 +6,7 @@ async function testVlanAPI() {
     console.log('Тестирую API /api/vlans...');
     const response = await fetch('http://localhost:7111/api/vlans');
     const result = await response.json();
-    
+
     if (result.success) {
       const vlan18 = result.data.find(vlan => vlan.vlan_id === 18);
       if (vlan18) {

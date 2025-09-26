@@ -21,7 +21,7 @@ class VlanModel {
         type = EXCLUDED.type
       RETURNING *
     `
-    
+
     const result = await pool.query(query, [vlan_id, name, description, type])
     return result.rows[0]
   }
@@ -40,19 +40,19 @@ class VlanModel {
    */
   static async findAll() {
     const query = `
-      SELECT 
+      SELECT
         v.*,
         COALESCE(mac_stats.mac_count, 0) as mac_count,
         COALESCE(device_stats.device_count, 0) as device_count
       FROM vlans v
       LEFT JOIN (
         SELECT vlan_id, COUNT(DISTINCT mac_address) as mac_count
-        FROM mac_addresses 
+        FROM mac_addresses
         GROUP BY vlan_id
       ) mac_stats ON v.vlan_id = mac_stats.vlan_id
       LEFT JOIN (
         SELECT vlan_id, COUNT(DISTINCT device_id) as device_count
-        FROM device_vlans 
+        FROM device_vlans
         GROUP BY vlan_id
       ) device_stats ON v.vlan_id = device_stats.vlan_id
       ORDER BY v.vlan_id
@@ -86,11 +86,11 @@ class VlanModel {
         inner_vlan_id = EXCLUDED.inner_vlan_id
       RETURNING *
     `
-    
+
     const result = await pool.query(query, [
       device_id, port_id, vlan_id, mode, native_vlan, qinq_enabled, outer_vlan, inner_vlan
     ])
-    
+
     return result.rows[0]
   }
 
@@ -121,12 +121,12 @@ class VlanModel {
       JOIN device_ports dp ON ma.port_id = dp.id
       JOIN vlans v ON ma.vlan_id = v.vlan_id
       WHERE ma.vlan_id = $1
-      GROUP BY d.id, d.hostname, d.ip_address, d.device_type, 
+      GROUP BY d.id, d.hostname, d.ip_address, d.device_type,
                dp.id, dp.port_number, dp.port_name, dp.description,
                ma.vlan_id, v.name, v.description
       ORDER BY d.ip_address, dp.port_number
     `
-    
+
     const result = await pool.query(query, [vlanId])
     return result.rows
   }
@@ -136,7 +136,7 @@ class VlanModel {
    */
   static async findVlanPath(vlanId) {
     const topology = await this.getTopology(vlanId)
-    
+
     // Group by devices
     const deviceMap = {}
     topology.forEach(item => {
@@ -149,7 +149,7 @@ class VlanModel {
           ports: []
         }
       }
-      
+
       deviceMap[item.device_id].ports.push({
         port_id: item.port_id,
         port_number: item.port_number,
@@ -163,7 +163,7 @@ class VlanModel {
         mac_count: item.mac_count
       })
     })
-    
+
     return {
       vlan_id: vlanId,
       vlan_name: topology[0]?.vlan_name || `VLAN${vlanId}`,
@@ -177,7 +177,7 @@ class VlanModel {
    */
   static async getMacAddresses(vlanId) {
     const query = `
-      SELECT 
+      SELECT
         ma.*,
         d.hostname,
         d.ip_address as device_ip,
@@ -189,7 +189,7 @@ class VlanModel {
       WHERE ma.vlan_id = $1
       ORDER BY ma.mac_address
     `
-    
+
     const result = await pool.query(query, [vlanId])
     return result.rows
   }
