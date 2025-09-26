@@ -1,280 +1,284 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Scheme L2 - Импорт данных</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .nav {
-            background: #f8fafc;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .nav-btn {
-            background: #6b7280;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-btn.active {
-            background: #3b82f6;
-        }
-        
-        .nav-btn:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
-        }
-        
-        .card h3 {
-            color: #1e293b;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        
-        .btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .btn:hover {
-            background: #2563eb;
-        }
-        
-        .btn.success {
-            background: #10b981;
-        }
-        
-        .btn.success:hover {
-            background: #059669;
-        }
-        
-        .results {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            min-height: 100px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .status {
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        
-        .status.success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .status.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-        
-        .file-info {
-            background: #e0f2fe;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid #0284c7;
-        }
-        
-        .file-info h4 {
-            color: #0c4a6e;
-            margin-bottom: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Scheme L2 - Импорт данных</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .nav {
+      background: #f8fafc;
+      padding: 20px 30px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn.active {
+      background: #3b82f6;
+    }
+
+    .nav-btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 20px;
+    }
+
+    .card h3 {
+      color: #1e293b;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+    }
+
+    .btn.success {
+      background: #10b981;
+    }
+
+    .btn.success:hover {
+      background: #059669;
+    }
+
+    .results {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      min-height: 100px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .status {
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+
+    .file-info {
+      background: #e0f2fe;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #0284c7;
+    }
+
+    .file-info h4 {
+      color: #0c4a6e;
+      margin-bottom: 8px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📁 Импорт данных</h1>
-            <p>Загрузка MAC таблиц и конфигураций устройств</p>
-        </div>
-        
-        <nav class="nav">
-            <div class="nav-buttons">
-                <a href="home.html" class="nav-btn">🏠 Главная</a>
-                <a href="#" class="nav-btn active">📁 Импорт данных</a>
-                <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
-                <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
-            </div>
-        </nav>
-        
-        <div class="content">
-            <!-- MAC таблицы -->
-            <div class="card">
-                <h3>📊 Импорт MAC таблиц</h3>
-                <p style="color: #64748b; margin-bottom: 20px;">
-                    Поддерживаемые форматы: D-Link Switch, Cisco/OLT. Автоматическое определение формата.
-                </p>
-                
-                <div class="input-group">
-                    <label for="deviceIp">IP устройства:</label>
-                    <input type="text" id="deviceIp" placeholder="192.168.1.1">
-                </div>
-                
-                <div class="input-group">
-                    <label for="macFile">MAC таблица (.mac, .txt):</label>
-                    <input type="file" id="macFile" accept=".mac,.txt" multiple>
-                </div>
-                
-                <button class="btn success" onclick="uploadMacTable()">Импортировать MAC таблицу</button>
-                <button class="btn" onclick="clearResults()">Очистить результаты</button>
-            </div>
-            
-            <!-- Пакетный импорт -->
-            <div class="card">
-                <h3>📦 Пакетный импорт</h3>
-                <p style="color: #64748b; margin-bottom: 20px;">
-                    Импорт всех файлов из директории data/macs с автоматическим извлечением IP из имени файла.
-                </p>
-                
-                <button class="btn success" onclick="importFromDirectory()">Импортировать из директории</button>
-                <button class="btn" onclick="testImport()">Тестовый импорт</button>
-            </div>
-            
-            <!-- Полная перезагрузка -->
-            <div class="card">
-                <h3>🔄 Полная перезагрузка базы данных</h3>
-                <p style="color: #dc2626; margin-bottom: 20px;">
-                    ⚠️ <strong>ВНИМАНИЕ:</strong> Эта операция полностью удалит все существующие данные и загрузит заново из директории data/macs.
-                </p>
-                
-                <button class="btn" style="background: #dc2626; margin-right: 10px;" onclick="clearDatabase()">🗑️ Очистить базу данных</button>
-                <button class="btn" style="background: #ea580c;" onclick="fullReload()">🔄 Полная перезагрузка</button>
-            </div>
-            
-            <!-- Результаты -->
-            <div class="card">
-                <h3>📝 Результаты импорта</h3>
-                <div class="results" id="results">
-                    <p style="color: #64748b;">Результаты операций будут отображаться здесь...</p>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>📁 Импорт данных</h1>
+      <p>Загрузка MAC таблиц и конфигураций устройств</p>
     </div>
 
-    <script>
-        async function uploadMacTable() {
-            const deviceIp = document.getElementById('deviceIp').value;
-            const macFile = document.getElementById('macFile').files[0];
-            const resultsDiv = document.getElementById('results');
-            
-            if (!deviceIp) {
-                resultsDiv.innerHTML = '<div class="status error">Введите IP устройства</div>';
-                return;
-            }
-            
-            if (!macFile) {
-                resultsDiv.innerHTML = '<div class="status error">Выберите файл MAC таблицы</div>';
-                return;
-            }
-            
-            try {
-                const formData = new FormData();
-                formData.append('macFile', macFile);
-                formData.append('deviceIp', deviceIp);
-                
-                resultsDiv.innerHTML = '<div class="status">⏳ Импорт в процессе...</div>';
-                
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultsDiv.innerHTML = `
+    <nav class="nav">
+      <div class="nav-buttons">
+        <a href="home.html" class="nav-btn">🏠 Главная</a>
+        <a href="#" class="nav-btn active">📁 Импорт данных</a>
+        <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
+        <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
+      </div>
+    </nav>
+
+    <div class="content">
+      <!-- MAC таблицы -->
+      <div class="card">
+        <h3>📊 Импорт MAC таблиц</h3>
+        <p style="color: #64748b; margin-bottom: 20px;">
+          Поддерживаемые форматы: D-Link Switch, Cisco/OLT. Автоматическое определение формата.
+        </p>
+
+        <div class="input-group">
+          <label for="deviceIp">IP устройства:</label>
+          <input type="text" id="deviceIp" placeholder="192.168.1.1">
+        </div>
+
+        <div class="input-group">
+          <label for="macFile">MAC таблица (.mac, .txt):</label>
+          <input type="file" id="macFile" accept=".mac,.txt" multiple>
+        </div>
+
+        <button class="btn success" onclick="uploadMacTable()">Импортировать MAC таблицу</button>
+        <button class="btn" onclick="clearResults()">Очистить результаты</button>
+      </div>
+
+      <!-- Пакетный импорт -->
+      <div class="card">
+        <h3>📦 Пакетный импорт</h3>
+        <p style="color: #64748b; margin-bottom: 20px;">
+          Импорт всех файлов из директории data/macs с автоматическим извлечением IP из имени файла.
+        </p>
+
+        <button class="btn success" onclick="importFromDirectory()">Импортировать из директории</button>
+        <button class="btn" onclick="testImport()">Тестовый импорт</button>
+      </div>
+
+      <!-- Полная перезагрузка -->
+      <div class="card">
+        <h3>🔄 Полная перезагрузка базы данных</h3>
+        <p style="color: #dc2626; margin-bottom: 20px;">
+          ⚠️ <strong>ВНИМАНИЕ:</strong> Эта операция полностью удалит все существующие данные и загрузит заново из
+          директории data/macs.
+        </p>
+
+        <button class="btn" style="background: #dc2626; margin-right: 10px;" onclick="clearDatabase()">🗑️ Очистить базу
+          данных</button>
+        <button class="btn" style="background: #ea580c;" onclick="fullReload()">🔄 Полная перезагрузка</button>
+      </div>
+
+      <!-- Результаты -->
+      <div class="card">
+        <h3>📝 Результаты импорта</h3>
+        <div class="results" id="results">
+          <p style="color: #64748b;">Результаты операций будут отображаться здесь...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function uploadMacTable() {
+      const deviceIp = document.getElementById('deviceIp').value;
+      const macFile = document.getElementById('macFile').files[0];
+      const resultsDiv = document.getElementById('results');
+
+      if (!deviceIp) {
+        resultsDiv.innerHTML = '<div class="status error">Введите IP устройства</div>';
+        return;
+      }
+
+      if (!macFile) {
+        resultsDiv.innerHTML = '<div class="status error">Выберите файл MAC таблицы</div>';
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('macFile', macFile);
+        formData.append('deviceIp', deviceIp);
+
+        resultsDiv.innerHTML = '<div class="status">⏳ Импорт в процессе...</div>';
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          resultsDiv.innerHTML = `
                         <div class="status success">✅ Импорт завершен успешно</div>
                         <div class="file-info">
                             <h4>Статистика импорта:</h4>
@@ -284,32 +288,32 @@
                             <p>🔗 VLAN найдено: ${result.stats?.vlans_analyzed || 0}</p>
                         </div>
                     `;
-                } else {
-                    resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.message}</div>`;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
-            }
+        } else {
+          resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.message}</div>`;
         }
-        
-        async function importFromDirectory() {
-            const resultsDiv = document.getElementById('results');
-            
-            try {
-                resultsDiv.innerHTML = '<div class="status">⏳ Пакетный импорт в процессе...</div>';
-                
-                const response = await fetch('/api/import/directory', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ directory: './data/macs' })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultsDiv.innerHTML = `
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+
+    async function importFromDirectory() {
+      const resultsDiv = document.getElementById('results');
+
+      try {
+        resultsDiv.innerHTML = '<div class="status">⏳ Пакетный импорт в процессе...</div>';
+
+        const response = await fetch('/api/import/directory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ directory: './data/macs' })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          resultsDiv.innerHTML = `
                         <div class="status success">✅ Пакетный импорт завершен</div>
                         <div class="file-info">
                             <h4>Результаты:</h4>
@@ -319,26 +323,26 @@
                             <p>🔗 VLAN найдено: ${result.stats?.total_vlans || 0}</p>
                         </div>
                     `;
-                } else {
-                    resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.message}</div>`;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
-            }
+        } else {
+          resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.message}</div>`;
         }
-        
-        async function testImport() {
-            const resultsDiv = document.getElementById('results');
-            
-            try {
-                resultsDiv.innerHTML = '<div class="status">⏳ Тестирование импорта...</div>';
-                
-                // Простой тест API
-                const response = await fetch('/api/devices');
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultsDiv.innerHTML = `
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+
+    async function testImport() {
+      const resultsDiv = document.getElementById('results');
+
+      try {
+        resultsDiv.innerHTML = '<div class="status">⏳ Тестирование импорта...</div>';
+
+        // Простой тест API
+        const response = await fetch('/api/devices');
+        const result = await response.json();
+
+        if (result.success) {
+          resultsDiv.innerHTML = `
                         <div class="status success">✅ Система работает корректно</div>
                         <div class="file-info">
                             <h4>Текущее состояние системы:</h4>
@@ -347,40 +351,40 @@
                             <p>💾 База данных: подключена</p>
                         </div>
                     `;
-                } else {
-                    resultsDiv.innerHTML = `<div class="status error">❌ Проблема с API: ${result.message}</div>`;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
-            }
+        } else {
+          resultsDiv.innerHTML = `<div class="status error">❌ Проблема с API: ${result.message}</div>`;
         }
-        
-        function clearResults() {
-            document.getElementById('results').innerHTML = '<p style="color: #64748b;">Результаты операций будут отображаться здесь...</p>';
-        }
-        
-        async function clearDatabase() {
-            const resultsDiv = document.getElementById('results');
-            
-            if (!confirm('⚠️ ВНИМАНИЕ! Вы уверены, что хотите удалить ВСЕ данные из базы? Это действие нельзя отменить!')) {
-                return;
-            }
-            
-            try {
-                resultsDiv.innerHTML = '<div class="status">🗑️ Очистка базы данных...</div>';
-                
-                const response = await fetch('/api/database/clear', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultsDiv.innerHTML = `
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('results').innerHTML = '<p style="color: #64748b;">Результаты операций будут отображаться здесь...</p>';
+    }
+
+    async function clearDatabase() {
+      const resultsDiv = document.getElementById('results');
+
+      if (!confirm('⚠️ ВНИМАНИЕ! Вы уверены, что хотите удалить ВСЕ данные из базы? Это действие нельзя отменить!')) {
+        return;
+      }
+
+      try {
+        resultsDiv.innerHTML = '<div class="status">🗑️ Очистка базы данных...</div>';
+
+        const response = await fetch('/api/database/clear', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          resultsDiv.innerHTML = `
                         <div class="status success">✅ База данных очищена успешно</div>
                         <div class="file-info">
                             <h4>Операция выполнена:</h4>
@@ -389,36 +393,36 @@
                             <p>📊 База данных готова для новых данных</p>
                         </div>
                     `;
-                } else {
-                    resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.error}</div>`;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
-            }
+        } else {
+          resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.error}</div>`;
         }
-        
-        async function fullReload() {
-            const resultsDiv = document.getElementById('results');
-            
-            if (!confirm('⚠️ ВНИМАНИЕ! Вы уверены, что хотите полностью перезагрузить базу данных? Все текущие данные будут удалены и заменены новыми из директории data/macs!')) {
-                return;
-            }
-            
-            try {
-                resultsDiv.innerHTML = '<div class="status">🔄 Выполняется полная перезагрузка базы данных...</div>';
-                
-                const response = await fetch('/api/database/reload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    resultsDiv.innerHTML = `
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+
+    async function fullReload() {
+      const resultsDiv = document.getElementById('results');
+
+      if (!confirm('⚠️ ВНИМАНИЕ! Вы уверены, что хотите полностью перезагрузить базу данных? Все текущие данные будут удалены и заменены новыми из директории data/macs!')) {
+        return;
+      }
+
+      try {
+        resultsDiv.innerHTML = '<div class="status">🔄 Выполняется полная перезагрузка базы данных...</div>';
+
+        const response = await fetch('/api/database/reload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          resultsDiv.innerHTML = `
                         <div class="status success">✅ Полная перезагрузка завершена успешно</div>
                         <div class="file-info">
                             <h4>Результаты перезагрузки:</h4>
@@ -426,19 +430,20 @@
                             <p>📁 MAC таблиц обработано: ${result.results.macTablesImported}</p>
                             <p>📊 Всего MAC адресов: ${result.results.totalMacAddresses}</p>
                             <p>🔗 Всего VLAN: ${result.results.totalVlans}</p>
-                            ${result.results.errors && result.results.errors.length > 0 ? 
-                                `<p>⚠️ Ошибок: ${result.results.errors.length}</p>` : 
-                                '<p>✅ Ошибок нет</p>'
-                            }
+                            ${result.results.errors && result.results.errors.length > 0 ?
+              `<p>⚠️ Ошибок: ${result.results.errors.length}</p>` :
+              '<p>✅ Ошибок нет</p>'
+            }
                         </div>
                     `;
-                } else {
-                    resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.error}</div>`;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
-            }
+        } else {
+          resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${result.error}</div>`;
         }
-    </script>
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+  </script>
 </body>
+
 </html>

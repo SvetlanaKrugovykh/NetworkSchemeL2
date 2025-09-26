@@ -11,7 +11,7 @@ class NetworkController {
     try {
       const dataDir = path.join(process.cwd(), 'data')
       const results = await ImportService.importFromDirectory(dataDir)
-      
+
       reply.send({
         success: true,
         message: 'Data import completed',
@@ -57,14 +57,14 @@ class NetworkController {
     try {
       const { id } = request.params
       const device = await DeviceModel.findWithVlans(parseInt(id))
-      
+
       if (!device) {
         return reply.code(404).send({
           success: false,
           error: 'Device not found'
         })
       }
-      
+
       reply.send({
         success: true,
         data: device
@@ -102,7 +102,7 @@ class NetworkController {
     try {
       const { vlanId } = request.params
       const topology = await VlanModel.findVlanPath(parseInt(vlanId))
-      
+
       reply.send({
         success: true,
         data: topology
@@ -122,7 +122,7 @@ class NetworkController {
     try {
       const { vlanId } = request.params
       const macAddresses = await VlanModel.getMacAddresses(parseInt(vlanId))
-      
+
       reply.send({
         success: true,
         data: macAddresses
@@ -143,10 +143,10 @@ class NetworkController {
       const { vlanId } = request.params
       const topology = await VlanModel.findVlanPath(parseInt(vlanId))
       const macAddresses = await VlanModel.getMacAddresses(parseInt(vlanId))
-      
+
       // Generate HTML
       const html = NetworkController.generateVlanHTML(topology, macAddresses)
-      
+
       reply.type('text/html').send(html)
     } catch (error) {
       reply.code(500).send({
@@ -176,110 +176,110 @@ class NetworkController {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VLAN ${topology.vlan_id} Topology</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
             background-color: #f5f5f5;
         }
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; 
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
             border-radius: 10px;
         }
-        .device { 
-            border: 2px solid #333; 
-            margin: 20px 0; 
-            padding: 15px; 
-            border-radius: 10px; 
+        .device {
+            border: 2px solid #333;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
             background: #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .device-header { 
-            background: #4a90e2; 
-            color: white; 
-            padding: 10px; 
-            margin: -15px -15px 15px -15px; 
+        .device-header {
+            background: #4a90e2;
+            color: white;
+            padding: 10px;
+            margin: -15px -15px 15px -15px;
             border-radius: 8px 8px 0 0;
             font-weight: bold;
         }
-        .ports { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 15px; 
+        .ports {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
             margin-top: 15px;
         }
-        .port { 
-            border: 1px solid #ddd; 
-            padding: 10px; 
-            border-radius: 5px; 
+        .port {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
             background: #f9f9f9;
         }
-        .port-header { 
-            font-weight: bold; 
-            color: #333; 
-            border-bottom: 1px solid #ddd; 
-            padding-bottom: 5px; 
+        .port-header {
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
             margin-bottom: 10px;
         }
-        .vlan-mode { 
-            display: inline-block; 
-            padding: 2px 8px; 
-            border-radius: 3px; 
-            font-size: 0.8em; 
+        .vlan-mode {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
             margin: 2px;
         }
-        .tagged { 
-            background: #e3f2fd; 
-            color: #1976d2; 
+        .tagged {
+            background: #e3f2fd;
+            color: #1976d2;
             border: 1px solid #1976d2;
         }
-        .untagged { 
-            background: #f3e5f5; 
-            color: #7b1fa2; 
+        .untagged {
+            background: #f3e5f5;
+            color: #7b1fa2;
             border: 1px solid #7b1fa2;
         }
-        .mac-addresses { 
+        .mac-addresses {
             margin-top: 15px;
         }
-        .mac-item { 
-            background: #e8f5e8; 
-            padding: 5px 10px; 
-            margin: 2px 0; 
-            border-radius: 3px; 
-            font-family: monospace; 
+        .mac-item {
+            background: #e8f5e8;
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 3px;
+            font-family: monospace;
             font-size: 0.9em;
             border-left: 3px solid #4caf50;
         }
-        .stats { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin: 20px 0;
         }
-        .stat-item { 
-            text-align: center; 
-            padding: 15px; 
-            background: linear-gradient(135deg, #f093fb, #f5576c); 
-            color: white; 
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
             border-radius: 10px;
         }
-        .stat-number { 
-            font-size: 2em; 
+        .stat-number {
+            font-size: 2em;
             font-weight: bold;
         }
-        .stat-label { 
-            font-size: 0.9em; 
+        .stat-label {
+            font-size: 0.9em;
             opacity: 0.9;
         }
     </style>
@@ -290,7 +290,7 @@ class NetworkController {
             <h1>VLAN ${topology.vlan_id} - ${topology.vlan_name}</h1>
             <p>${topology.vlan_description}</p>
         </div>
-        
+
         <div class="stats">
             <div class="stat-item">
                 <div class="stat-number">${topology.devices.length}</div>
@@ -309,19 +309,19 @@ class NetworkController {
 
     topology.devices.forEach(device => {
       const deviceMacs = macByDevice[device.ip_address] || []
-      
+
       html += `
         <div class="device">
             <div class="device-header">
                 ${device.hostname} (${device.ip_address}) - ${device.device_type.toUpperCase()}
             </div>
-            
+
             <div class="ports">
 `
-      
+
       device.ports.forEach(port => {
         const portMacs = deviceMacs.filter(mac => mac.port_number === port.port_number)
-        
+
         html += `
                 <div class="port">
                     <div class="port-header">
@@ -333,7 +333,7 @@ class NetworkController {
                         ${port.native_vlan ? '<span class="vlan-mode untagged">NATIVE</span>' : ''}
                         ${port.qinq_enabled ? '<span class="vlan-mode tagged">QinQ</span>' : ''}
                     </div>
-                    
+
                     ${portMacs.length > 0 ? `
                     <div class="mac-addresses">
                         <strong>MAC Addresses (${portMacs.length}):</strong>
@@ -350,7 +350,7 @@ class NetworkController {
                 </div>
 `
       })
-      
+
       html += `
             </div>
         </div>
@@ -374,7 +374,7 @@ class NetworkController {
       let deviceIp = null
       let configContent = null
       let macContent = null
-      
+
       // Process multipart form data
       for await (const part of parts) {
         if (part.type === 'field') {
@@ -384,7 +384,7 @@ class NetworkController {
         } else if (part.type === 'file') {
           const content = await part.toBuffer()
           const text = content.toString('utf8')
-          
+
           if (part.fieldname === 'configFile') {
             configContent = text
           } else if (part.fieldname === 'macFile') {
@@ -392,23 +392,23 @@ class NetworkController {
           }
         }
       }
-      
+
       if (!deviceIp) {
         return reply.code(400).send({
           success: false,
           error: 'Device IP is required'
         })
       }
-      
+
       if (!configContent && !macContent) {
         return reply.code(400).send({
           success: false,
           error: 'At least one file is required'
         })
       }
-      
+
       const results = {}
-      
+
       // Import configuration if provided
       if (configContent) {
         try {
@@ -421,7 +421,7 @@ class NetworkController {
           }
         }
       }
-      
+
       // Import MAC table if provided
       if (macContent) {
         try {
@@ -434,17 +434,17 @@ class NetworkController {
           }
         }
       }
-      
+
       // Check if at least one import was successful
       const configSuccess = !results.config || results.config.success
       const macSuccess = !results.mac || results.mac.success
-      
+
       reply.send({
         success: configSuccess && macSuccess,
         message: 'File upload and import completed',
         ...results
       })
-      
+
     } catch (error) {
       reply.code(500).send({
         success: false,
@@ -460,9 +460,9 @@ class NetworkController {
     try {
       const { id } = request.params
       const pool = require('../db/pool')
-      
+
       const result = await pool.query(`
-        SELECT 
+        SELECT
           dp.id,
           dp.port_name,
           COUNT(ma.id) as mac_count
@@ -472,7 +472,7 @@ class NetworkController {
         GROUP BY dp.id, dp.port_name
         ORDER BY dp.port_name
       `, [id])
-      
+
       reply.send({
         success: true,
         data: result.rows
@@ -492,9 +492,9 @@ class NetworkController {
     try {
       const { id } = request.params
       const pool = require('../db/pool')
-      
+
       const result = await pool.query(`
-        SELECT 
+        SELECT
           v.vlan_id,
           v.name,
           COUNT(ma.id) as mac_count
@@ -504,7 +504,7 @@ class NetworkController {
         GROUP BY v.vlan_id, v.name
         ORDER BY v.vlan_id
       `, [id])
-      
+
       reply.send({
         success: true,
         data: result.rows
@@ -523,24 +523,24 @@ class NetworkController {
   static async getMacStats(request, reply) {
     try {
       const pool = require('../db/pool')
-      
+
       // Get MAC count by VLAN
       const vlanStats = await pool.query(`
-        SELECT vlan_id, COUNT(*) as mac_count 
-        FROM mac_addresses 
-        GROUP BY vlan_id 
+        SELECT vlan_id, COUNT(*) as mac_count
+        FROM mac_addresses
+        GROUP BY vlan_id
         ORDER BY vlan_id
       `)
-      
+
       // Get total MAC count
       const totalStats = await pool.query(`
-        SELECT 
+        SELECT
           COUNT(*) as total_macs,
           COUNT(DISTINCT vlan_id) as vlans_with_macs,
           COUNT(DISTINCT device_id) as devices_with_macs
         FROM mac_addresses
       `)
-      
+
       reply.send({
         success: true,
         data: {
@@ -562,7 +562,7 @@ class NetworkController {
   static async clearDatabase(request, reply) {
     try {
       const pool = require('../db/pool')
-      
+
       // Удаляем данные в правильном порядке (учитывая внешние ключи)
       await pool.query('DELETE FROM mac_addresses')
       await pool.query('DELETE FROM device_vlans')
@@ -570,7 +570,7 @@ class NetworkController {
       await pool.query('DELETE FROM device_configurations')
       await pool.query('DELETE FROM devices')
       await pool.query('DELETE FROM vlans')
-      
+
       // Сбрасываем последовательности
       await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
@@ -578,7 +578,7 @@ class NetworkController {
       await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
-      
+
       reply.send({
         success: true,
         message: 'Database cleared successfully'
@@ -597,7 +597,7 @@ class NetworkController {
   static async fullReload(request, reply) {
     try {
       const pool = require('../db/pool')
-      
+
       // Очищаем базу данных
       await pool.query('DELETE FROM mac_addresses')
       await pool.query('DELETE FROM device_vlans')
@@ -605,7 +605,7 @@ class NetworkController {
       await pool.query('DELETE FROM device_configurations')
       await pool.query('DELETE FROM devices')
       await pool.query('DELETE FROM vlans')
-      
+
       // Сбрасываем последовательности
       await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
@@ -613,11 +613,11 @@ class NetworkController {
       await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
       await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
-      
+
       // Импортируем новые данные
       const dataDir = path.join(process.cwd(), 'data')
       const results = await ImportService.importFromDirectory(dataDir)
-      
+
       reply.send({
         success: true,
         message: 'Full reload completed successfully',
@@ -643,14 +643,14 @@ class NetworkController {
   static async getStats(request, reply) {
     try {
       const pool = require('../db/pool')
-      
+
       const [devices, vlans, macs, ports] = await Promise.all([
         pool.query('SELECT COUNT(*) as count FROM devices'),
         pool.query('SELECT COUNT(*) as count FROM vlans'),
         pool.query('SELECT COUNT(DISTINCT mac_address) as count FROM mac_addresses'),
         pool.query('SELECT COUNT(*) as count FROM device_ports')
       ])
-      
+
       reply.send({
         success: true,
         data: {
