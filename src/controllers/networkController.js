@@ -34,12 +34,15 @@ class NetworkController {
    */
   static async getDevices(request, reply) {
     try {
+      console.log('🔍 Getting devices...')
       const devices = await DeviceModel.findAll()
+      console.log('✅ Found devices:', devices.length)
       reply.send({
         success: true,
         data: devices
       })
     } catch (error) {
+      console.error('❌ Error in getDevices:', error)
       reply.code(500).send({
         success: false,
         error: error.message
@@ -543,6 +546,118 @@ class NetworkController {
         data: {
           total: totalStats.rows[0],
           by_vlan: vlanStats.rows
+        }
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Clear database tables
+   */
+  static async clearDatabase(request, reply) {
+    try {
+      const pool = require('../db/pool')
+      
+      // Удаляем данные в правильном порядке (учитывая внешние ключи)
+      await pool.query('DELETE FROM mac_addresses')
+      await pool.query('DELETE FROM device_vlans')
+      await pool.query('DELETE FROM device_ports')
+      await pool.query('DELETE FROM device_configurations')
+      await pool.query('DELETE FROM devices')
+      await pool.query('DELETE FROM vlans')
+      
+      // Сбрасываем последовательности
+      await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
+      
+      reply.send({
+        success: true,
+        message: 'Database cleared successfully'
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Full reload: clear database and import fresh data
+   */
+  static async fullReload(request, reply) {
+    try {
+      const pool = require('../db/pool')
+      
+      // Очищаем базу данных
+      await pool.query('DELETE FROM mac_addresses')
+      await pool.query('DELETE FROM device_vlans')
+      await pool.query('DELETE FROM device_ports')
+      await pool.query('DELETE FROM device_configurations')
+      await pool.query('DELETE FROM devices')
+      await pool.query('DELETE FROM vlans')
+      
+      // Сбрасываем последовательности
+      await pool.query('ALTER SEQUENCE devices_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_ports_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE vlans_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE mac_addresses_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_vlans_id_seq RESTART WITH 1')
+      await pool.query('ALTER SEQUENCE device_configurations_id_seq RESTART WITH 1')
+      
+      // Импортируем новые данные
+      const dataDir = path.join(process.cwd(), 'data')
+      const results = await ImportService.importFromDirectory(dataDir)
+      
+      reply.send({
+        success: true,
+        message: 'Full reload completed successfully',
+        results: {
+          devicesImported: results.devices.length,
+          macTablesImported: results.macTables.length,
+          totalMacAddresses: results.totalMacEntries || 0,
+          totalVlans: results.totalVlans || 0,
+          errors: results.errors
+        }
+      })
+    } catch (error) {
+      reply.code(500).send({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * Get general statistics
+   */
+  static async getStats(request, reply) {
+    try {
+      const pool = require('../db/pool')
+      
+      const [devices, vlans, macs, ports] = await Promise.all([
+        pool.query('SELECT COUNT(*) as count FROM devices'),
+        pool.query('SELECT COUNT(*) as count FROM vlans'),
+        pool.query('SELECT COUNT(DISTINCT mac_address) as count FROM mac_addresses'),
+        pool.query('SELECT COUNT(*) as count FROM device_ports')
+      ])
+      
+      reply.send({
+        success: true,
+        data: {
+          devices: parseInt(devices.rows[0].count),
+          vlans: parseInt(vlans.rows[0].count),
+          macs: parseInt(macs.rows[0].count),
+          ports: parseInt(ports.rows[0].count)
         }
       })
     } catch (error) {

@@ -42,6 +42,17 @@ if (Platform_OS === 'Windows') {
   setupLogging()
 }
 
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error)
+  console.error('Stack:', error.stack)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise)
+  console.error('Reason:', reason)
+})
+
 app.listen({ port: PORT, host: HOST }, (err, address) => {
   if (err) {
     app.log.error(err)

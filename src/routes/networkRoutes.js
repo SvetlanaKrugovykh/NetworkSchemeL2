@@ -23,6 +23,8 @@ async function networkRoutes(fastify, options) {
       endpoints: {
         upload: 'POST /api/upload',
         import: 'POST /api/import',
+        clearDatabase: 'POST /api/database/clear',
+        fullReload: 'POST /api/database/reload',
         devices: 'GET /api/devices',
         device: 'GET /api/devices/:id',
         devicePorts: 'GET /api/devices/:id/ports',
@@ -43,6 +45,10 @@ async function networkRoutes(fastify, options) {
   fastify.post('/api/import', NetworkController.importData)
   fastify.post('/api/import/directory', NetworkController.importData)
   
+  // Database management
+  fastify.post('/api/database/clear', NetworkController.clearDatabase)
+  fastify.post('/api/database/reload', NetworkController.fullReload)
+  
   // Devices
   fastify.get('/api/devices', NetworkController.getDevices)
   fastify.get('/api/devices/:id', NetworkController.getDevice)
@@ -56,6 +62,7 @@ async function networkRoutes(fastify, options) {
   
   // Statistics
   fastify.get('/api/stats/macs', NetworkController.getMacStats)
+  fastify.get('/api/stats', NetworkController.getStats)
   
   // HTML scheme generation
   fastify.get('/api/vlans/:vlanId/scheme', NetworkController.generateVlanScheme)
