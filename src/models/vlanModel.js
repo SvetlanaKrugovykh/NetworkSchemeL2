@@ -46,8 +46,8 @@ class VlanModel {
         COALESCE(CAST(mac_stats.device_count AS INTEGER), 0) as device_count
       FROM vlans v
       LEFT JOIN (
-        SELECT 
-          vlan_id, 
+        SELECT
+          vlan_id,
           COUNT(DISTINCT mac_address) as mac_count,
           COUNT(DISTINCT device_id) as device_count
         FROM mac_addresses
@@ -56,14 +56,14 @@ class VlanModel {
       ORDER BY v.vlan_id
     `
     const result = await pool.query(query)
-    
+
     // Дополнительная проверка данных
     const cleanedRows = result.rows.map(row => ({
       ...row,
       mac_count: Math.max(0, parseInt(row.mac_count) || 0),
       device_count: Math.max(0, parseInt(row.device_count) || 0)
     }))
-    
+
     return cleanedRows
   }
 

@@ -339,7 +339,7 @@
 
       document.getElementById('totalVlans').textContent = totalVlans;
       document.getElementById('totalMacs').textContent = totalMacs.toLocaleString();
-      
+
       // Загружаем корректную статистику устройств из API
       fetch('/api/stats')
         .then(r => r.json())
@@ -349,7 +349,7 @@
           }
         })
         .catch(() => document.getElementById('totalDevices').textContent = '?');
-        
+
       document.getElementById('avgMacsPerVlan').textContent = avgMacs;
     }
 
