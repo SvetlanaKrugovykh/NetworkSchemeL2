@@ -11,7 +11,7 @@ const pool = require('../db/pool')
  * Handles L2 topology analysis with source/transit detection
  */
 class ImportService {
-  
+
   /**
    * Import D-Link switch configuration
    * @param {string} configText - Configuration text
@@ -20,7 +20,7 @@ class ImportService {
   static async importDlinkConfig(configText, deviceIp) {
     try {
       const parsedConfig = DlinkConfigParser.parseConfig(configText)
-      
+
       // Create or update device
       const deviceId = await DeviceModel.createOrUpdate({
         ip_address: deviceIp,
@@ -32,9 +32,9 @@ class ImportService {
         firmware_version: parsedConfig.deviceInfo.firmwareVersion || null,
         hardware_version: parsedConfig.deviceInfo.hardwareVersion || null
       })
-      
+
       console.log(`Device imported/updated: ${deviceIp} (ID: ${deviceId})`)
-      
+
       // Import VLANs
       for (const vlan of parsedConfig.vlans) {
         await VlanModel.createOrUpdate({
@@ -43,18 +43,18 @@ class ImportService {
           description: vlan.description || `VLAN ${vlan.vlan_id}`,
           type: vlan.type || 'ethernet'
         })
-        
+
         console.log(`VLAN imported: ${vlan.vlan_id} (${vlan.name})`)
       }
-      
+
       // Import ports and VLAN assignments
       for (const port of parsedConfig.ports) {
         // Create port
         const portResult = await pool.query(`
           INSERT INTO device_ports (device_id, port_number, port_name, port_type, description, admin_state, oper_state)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (device_id, port_number) 
-          DO UPDATE SET 
+          ON CONFLICT (device_id, port_number)
+          DO UPDATE SET
             port_name = EXCLUDED.port_name,
             port_type = EXCLUDED.port_type,
             description = EXCLUDED.description,
@@ -70,9 +70,9 @@ class ImportService {
           port.admin_state || 'up',
           port.oper_state || 'unknown'
         ])
-        
+
         const portId = portResult.rows[0].id
-        
+
         // Import VLAN assignments for this port
         if (port.vlans && port.vlans.length > 0) {
           for (const vlanAssignment of port.vlans) {
@@ -80,7 +80,7 @@ class ImportService {
               INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan, qinq_enabled)
               VALUES ($1, $2, $3, $4, $5, $6)
               ON CONFLICT (device_id, port_id, vlan_id)
-              DO UPDATE SET 
+              DO UPDATE SET
                 mode = EXCLUDED.mode,
                 native_vlan = EXCLUDED.native_vlan,
                 qinq_enabled = EXCLUDED.qinq_enabled
@@ -94,10 +94,10 @@ class ImportService {
             ])
           }
         }
-        
+
         console.log(`Port imported: ${port.port_number} with ${port.vlans?.length || 0} VLAN assignments`)
       }
-      
+
       return {
         success: true,
         device_id: deviceId,
@@ -108,7 +108,7 @@ class ImportService {
           device_info: parsedConfig.deviceInfo
         }
       }
-      
+
     } catch (error) {
       console.error('Error importing D-Link configuration:', error)
       return {
@@ -118,7 +118,7 @@ class ImportService {
       }
     }
   }
-  
+
   /**
    * Import MAC address table with topology analysis
    * @param {string} macTableText - MAC table text
@@ -132,7 +132,7 @@ class ImportService {
         'SELECT id, hostname, device_type FROM devices WHERE ip_address = $1',
         [deviceIp]
       )
-      
+
       let device
       if (deviceResult.rows.length === 0) {
         // Auto-create device if it doesn't exist
@@ -152,10 +152,10 @@ class ImportService {
       } else {
         device = deviceResult.rows[0]
       }
-      
+
       // Get port mappings for enhanced parsing
       const portMappings = await this.getPortMappings(device.id)
-      
+
       // Parse MAC table entries
       let macEntries
       if (format === 'dlink') {
@@ -168,7 +168,7 @@ class ImportService {
           portMappings
         })
       }
-      
+
       if (macEntries.length === 0) {
         return {
           success: false,
@@ -176,16 +176,16 @@ class ImportService {
           stats: { entries_processed: 0, entries_imported: 0 }
         }
       }
-      
+
       let importedCount = 0
       const failedEntries = []
-      
+
       // Import MAC entries with enhanced error handling
       for (const entry of macEntries) {
         try {
           // Find port ID by port number/name
           const portId = await this.resolvePortId(device.id, entry.port, portMappings)
-          
+
           if (!portId) {
             failedEntries.push({
               mac: entry.mac_address,
@@ -193,7 +193,7 @@ class ImportService {
             })
             continue
           }
-          
+
           // Ensure VLAN exists (auto-create if missing)
           if (entry.vlan_id) {
             await pool.query(`
@@ -211,13 +211,13 @@ class ImportService {
           // Insert MAC address entry
           await pool.query(`
             INSERT INTO mac_addresses (
-              mac_address, vlan_id, device_id, port_id, 
-              ip_address, description, client_type, 
+              mac_address, vlan_id, device_id, port_id,
+              ip_address, description, client_type,
               learning_method, last_seen, is_source, hop_count
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (mac_address, device_id, port_id, vlan_id)
-            DO UPDATE SET 
+            DO UPDATE SET
               learning_method = EXCLUDED.learning_method,
               last_seen = EXCLUDED.last_seen,
               description = COALESCE(EXCLUDED.description, mac_addresses.description),
@@ -235,9 +235,9 @@ class ImportService {
             entry.is_source, // Will be null initially, analyzed later
             entry.hop_count // Will be null initially, calculated later
           ])
-          
+
           importedCount++
-          
+
         } catch (entryError) {
           console.error(`Error importing MAC entry ${entry.mac_address}:`, entryError)
           failedEntries.push({
@@ -246,18 +246,18 @@ class ImportService {
           })
         }
       }
-      
+
       // Perform topology analysis for all imported VLANs
       const uniqueVlans = [...new Set(macEntries.map(e => e.vlan_id))]
       const topologyResults = []
-      
+
       for (const vlanId of uniqueVlans) {
         try {
           const topology = await TopologyAnalyzer.analyzeVlanTopology(vlanId)
           topologyResults.push({
             vlan_id: vlanId,
             analysis_complete: true,
-            mac_sources_identified: topology.filter(t => 
+            mac_sources_identified: topology.filter(t =>
               t.locations.some(l => l.is_source)
             ).length
           })
@@ -270,7 +270,7 @@ class ImportService {
           })
         }
       }
-      
+
       return {
         success: true,
         message: `Successfully imported MAC table for ${deviceIp}`,
@@ -285,7 +285,7 @@ class ImportService {
         topology_analysis: topologyResults,
         failed_entries: failedEntries.length > 0 ? failedEntries : undefined
       }
-      
+
     } catch (error) {
       console.error('Error importing MAC table:', error)
       return {
@@ -295,14 +295,14 @@ class ImportService {
       }
     }
   }
-  
+
   /**
    * Get port mappings for a device
    * @param {number} deviceId - Device ID
    */
   static async getPortMappings(deviceId) {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         dp.id,
         dp.port_number,
         dp.port_name,
@@ -312,9 +312,9 @@ class ImportService {
       FROM device_ports dp
       WHERE dp.device_id = $1
     `, [deviceId])
-    
+
     const mappings = {}
-    
+
     result.rows.forEach(port => {
       // Map by port number
       mappings[port.port_number.toString()] = {
@@ -326,16 +326,16 @@ class ImportService {
         mode: this.determinePortMode(port.vlans),
         native_vlan: this.getNativeVlan(port.vlans)
       }
-      
+
       // Also map by port name if available
       if (port.port_name && port.port_name !== port.port_number.toString()) {
         mappings[port.port_name] = mappings[port.port_number.toString()]
       }
     })
-    
+
     return mappings
   }
-  
+
   /**
    * Resolve port ID from port identifier
    * @param {number} deviceId - Device ID
@@ -346,18 +346,18 @@ class ImportService {
     if (portMappings && portMappings[portIdentifier]) {
       return portMappings[portIdentifier].id
     }
-    
+
     // First try to find existing port
     let result = await pool.query(`
-      SELECT id FROM device_ports 
+      SELECT id FROM device_ports
       WHERE device_id = $1 AND (port_number = $2 OR port_name = $3)
       LIMIT 1
     `, [deviceId, parseInt(portIdentifier) || 0, portIdentifier])
-    
+
     if (result.rows.length > 0) {
       return result.rows[0].id
     }
-    
+
     // Auto-create port if it doesn't exist
     console.log(`Auto-creating port ${portIdentifier} for device ${deviceId}`)
     const insertResult = await pool.query(`
@@ -372,10 +372,10 @@ class ImportService {
       'up', // Assume port is up if MAC entries exist
       `Auto-created port from MAC table on ${new Date().toISOString()}`
     ])
-    
+
     return insertResult.rows[0].id
   }
-  
+
   /**
    * Determine port mode based on VLAN configuration
    * @param {Array} vlans - VLAN configurations
@@ -384,10 +384,10 @@ class ImportService {
     if (!vlans || vlans.length === 0) {
       return 'unknown'
     }
-    
+
     const hasUntagged = vlans.some(v => v.mode === 'untagged' || v.native_vlan)
     const hasTagged = vlans.some(v => v.mode === 'tagged')
-    
+
     if (hasUntagged && hasTagged) {
       return 'hybrid'
     } else if (hasUntagged) {
@@ -395,10 +395,10 @@ class ImportService {
     } else if (hasTagged) {
       return 'trunk'
     }
-    
+
     return 'unknown'
   }
-  
+
   /**
    * Get native VLAN from port configuration
    * @param {Array} vlans - VLAN configurations
@@ -407,11 +407,11 @@ class ImportService {
     if (!vlans || vlans.length === 0) {
       return null
     }
-    
+
     const nativeVlan = vlans.find(v => v.native_vlan || v.mode === 'untagged')
     return nativeVlan ? nativeVlan.vlan_id : null
   }
-  
+
   /**
    * Auto-detect device type and import configuration
    * @param {string} configText - Configuration text
@@ -421,19 +421,19 @@ class ImportService {
     try {
       // Detect device type from configuration content
       const deviceType = this.detectDeviceType(configText)
-      
+
       console.log(`Auto-detected device type: ${deviceType} for ${deviceIp}`)
-      
+
       let result
       switch (deviceType) {
         case 'OLT':
           result = await this.importOltConfig(configText, deviceIp)
           break
-        
+
         case 'D-Link':
           result = await this.importDlinkConfig(configText, deviceIp)
           break
-        
+
         default:
           // Try OLT first, then D-Link
           result = await this.importOltConfig(configText, deviceIp)
@@ -441,12 +441,12 @@ class ImportService {
             result = await this.importDlinkConfig(configText, deviceIp)
           }
       }
-      
+
       return {
         ...result,
         detected_type: deviceType
       }
-      
+
     } catch (error) {
       console.error('Error in auto-import:', error)
       return {
@@ -456,7 +456,7 @@ class ImportService {
       }
     }
   }
-  
+
   /**
    * Import OLT configuration
    * @param {string} configText - Configuration text
@@ -466,7 +466,7 @@ class ImportService {
     try {
       const parser = new OltConfigParser()
       const parsedConfig = parser.parse(configText, deviceIp)
-      
+
       // Create or update device
       const deviceId = await DeviceModel.createOrUpdate({
         ip_address: deviceIp,
@@ -478,9 +478,9 @@ class ImportService {
         firmware_version: parsedConfig.device.firmware || null,
         hardware_version: null
       })
-      
+
       console.log(`OLT Device imported/updated: ${deviceIp} (ID: ${deviceId})`)
-      
+
       // Import VLANs
       for (const vlan of parsedConfig.vlans) {
         await VlanModel.createOrUpdate({
@@ -490,14 +490,14 @@ class ImportService {
           type: 'ethernet'
         })
       }
-      
+
       // Import ports (including EPON subscriber ports)
       for (const port of parsedConfig.ports) {
         const portResult = await pool.query(`
           INSERT INTO device_ports (device_id, port_number, port_name, port_type, description, admin_state, oper_state)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (device_id, port_number) 
-          DO UPDATE SET 
+          ON CONFLICT (device_id, port_number)
+          DO UPDATE SET
             port_name = EXCLUDED.port_name,
             port_type = EXCLUDED.port_type,
             description = EXCLUDED.description,
@@ -513,9 +513,9 @@ class ImportService {
           port.status || 'up',
           port.status || 'up'
         ])
-        
+
         const portId = portResult.rows[0].id
-        
+
         // Import VLAN assignments
         if (port.vlans && port.vlans.length > 0) {
           for (const vlanId of port.vlans) {
@@ -523,7 +523,7 @@ class ImportService {
               INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
               VALUES ($1, $2, $3, $4, $5)
               ON CONFLICT (device_id, port_id, vlan_id)
-              DO UPDATE SET 
+              DO UPDATE SET
                 mode = EXCLUDED.mode,
                 native_vlan = EXCLUDED.native_vlan
             `, [
@@ -535,14 +535,14 @@ class ImportService {
             ])
           }
         }
-        
+
         // For EPON access ports, add native VLAN if specified
         if (port.native_vlan && port.port_type === 'EPON_ACCESS') {
           await pool.query(`
             INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (device_id, port_id, vlan_id)
-            DO UPDATE SET 
+            DO UPDATE SET
               mode = EXCLUDED.mode,
               native_vlan = EXCLUDED.native_vlan
           `, [
@@ -554,24 +554,24 @@ class ImportService {
           ])
         }
       }
-      
+
       // Store subscriber information for EPON ports
       for (const subscriber of parsedConfig.subscribers) {
         if (subscriber.vlan) {
           // Find the subscriber port
           const portResult = await pool.query(`
-            SELECT id FROM device_ports 
+            SELECT id FROM device_ports
             WHERE device_id = $1 AND port_name = $2
           `, [deviceId, subscriber.interface_name])
-          
+
           if (portResult.rows.length > 0) {
             const portId = portResult.rows[0].id
-            
+
             await pool.query(`
               INSERT INTO device_vlans (device_id, port_id, vlan_id, mode, native_vlan)
               VALUES ($1, $2, $3, $4, $5)
               ON CONFLICT (device_id, port_id, vlan_id)
-              DO UPDATE SET 
+              DO UPDATE SET
                 mode = EXCLUDED.mode,
                 native_vlan = EXCLUDED.native_vlan
             `, [
@@ -584,7 +584,7 @@ class ImportService {
           }
         }
       }
-      
+
       return {
         success: true,
         device_id: deviceId,
@@ -597,7 +597,7 @@ class ImportService {
           device_info: parsedConfig.device
         }
       }
-      
+
     } catch (error) {
       console.error('Error importing OLT configuration:', error)
       return {
@@ -607,7 +607,7 @@ class ImportService {
       }
     }
   }
-  
+
   /**
    * Detect device type from configuration content
    * @param {string} configText - Configuration text
@@ -615,31 +615,31 @@ class ImportService {
    */
   static detectDeviceType(configText) {
     const content = configText.toLowerCase()
-    
+
     // OLT indicators
-    if (content.includes('epon bind-onu') || 
-        content.includes('interface epon') ||
-        content.includes('hostname olt') ||
-        content.includes('epon sla upstream') ||
-        /epon\d+\/\d+:\d+/.test(content)) {
+    if (content.includes('epon bind-onu') ||
+      content.includes('interface epon') ||
+      content.includes('hostname olt') ||
+      content.includes('epon sla upstream') ||
+      /epon\d+\/\d+:\d+/.test(content)) {
       return 'OLT'
     }
-    
+
     // D-Link switch indicators
-    if (content.includes('dgs-') || 
-        content.includes('des-') ||
-        content.includes('command: show config') ||
-        content.includes('d-link corporation') ||
-        content.includes('create vlan') && content.includes('tag')) {
+    if (content.includes('dgs-') ||
+      content.includes('des-') ||
+      content.includes('command: show config') ||
+      content.includes('d-link corporation') ||
+      content.includes('create vlan') && content.includes('tag')) {
       return 'D-Link'
     }
-    
+
     // Cisco indicators (for future)
-    if (content.includes('cisco') || 
-        content.includes('version ') && content.includes('ios')) {
+    if (content.includes('cisco') ||
+      content.includes('version ') && content.includes('ios')) {
       return 'Cisco'
     }
-    
+
     return 'Unknown'
   }
 
@@ -652,34 +652,34 @@ class ImportService {
     if (!vendor || vendor === 'Unknown') {
       return 'unknown'
     }
-    
+
     const vendorLower = vendor.toLowerCase()
-    
+
     // Network infrastructure
     if (['cisco', 'd-link', 'huawei', 'hp', 'juniper', 'aruba'].some(v => vendorLower.includes(v))) {
       return 'network_device'
     }
-    
+
     // Virtualization
     if (['vmware', 'virtualbox', 'qemu', 'hyper-v'].some(v => vendorLower.includes(v))) {
       return 'virtual_machine'
     }
-    
+
     // Computing devices
     if (['intel', 'dell', 'apple', 'lenovo', 'asus'].some(v => vendorLower.includes(v))) {
       return 'computer'
     }
-    
+
     return 'device'
   }
-  
+
   /**
    * Get import statistics for a device
    * @param {string} deviceIp - Device IP address
    */
   static async getImportStats(deviceIp) {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         d.id,
         d.hostname,
         d.device_type,
@@ -691,11 +691,11 @@ class ImportService {
       FROM devices d
       WHERE d.ip_address = $1
     `, [deviceIp])
-    
+
     if (result.rows.length === 0) {
       return null
     }
-    
+
     return result.rows[0]
   }
 
@@ -706,43 +706,43 @@ class ImportService {
   static async importFromDirectory(dataDir) {
     const fs = require('fs')
     const path = require('path')
-    
+
     const results = {
       devices: [],
       macTables: [],
       errors: []
     }
-    
+
     try {
       const configsDir = path.join(dataDir, 'configs')
       const macsDir = path.join(dataDir, 'macs')
-      
+
       // Check if directories exist
       if (!fs.existsSync(configsDir)) {
         results.errors.push(`Configs directory not found: ${configsDir}`)
       }
-      
+
       if (!fs.existsSync(macsDir)) {
         results.errors.push(`MACs directory not found: ${macsDir}`)
       }
-      
+
       // Import configurations
       if (fs.existsSync(configsDir)) {
-        const configFiles = fs.readdirSync(configsDir).filter(file => 
+        const configFiles = fs.readdirSync(configsDir).filter(file =>
           file.endsWith('.cfg') || file.endsWith('.txt') || file.endsWith('.conf')
         )
-        
+
         for (const configFile of configFiles) {
           try {
             const filePath = path.join(configsDir, configFile)
             const configText = fs.readFileSync(filePath, 'utf8')
-            
+
             // Extract IP from filename (assuming format like 192_168_1_1.cfg or 192.168.1.1.cfg)
             const ipMatch = configFile.match(/(\d+)[._](\d+)[._](\d+)[._](\d+)/)
             const deviceIp = ipMatch ? `${ipMatch[1]}.${ipMatch[2]}.${ipMatch[3]}.${ipMatch[4]}` : `unknown-${configFile}`
-            
+
             console.log(`Importing config: ${configFile} for device ${deviceIp}`)
-            
+
             const result = await this.importConfigAuto(configText, deviceIp)
             results.devices.push({
               file: configFile,
@@ -750,52 +750,52 @@ class ImportService {
               type: result.detected_type,
               stats: result.stats
             })
-            
+
           } catch (error) {
             console.error(`Error importing config ${configFile}:`, error.message)
             results.errors.push(`Config ${configFile}: ${error.message}`)
           }
         }
       }
-      
+
       // Import MAC tables
       if (fs.existsSync(macsDir)) {
-        const macFiles = fs.readdirSync(macsDir).filter(file => 
+        const macFiles = fs.readdirSync(macsDir).filter(file =>
           file.endsWith('.mac') || file.endsWith('.txt')
         )
-        
+
         for (const macFile of macFiles) {
           try {
             const filePath = path.join(macsDir, macFile)
             const macText = fs.readFileSync(filePath, 'utf8')
-            
+
             // Extract IP from filename (assuming format like 192_168_1_1.mac or 192.168.1.1.mac)
             const ipMatch = macFile.match(/(\d+)[._](\d+)[._](\d+)[._](\d+)/)
             const deviceIp = ipMatch ? `${ipMatch[1]}.${ipMatch[2]}.${ipMatch[3]}.${ipMatch[4]}` : `unknown-${macFile}`
-            
+
             console.log(`Importing MAC table: ${macFile} for device ${deviceIp}`)
-            
+
             const result = await this.importMacTable(macText, deviceIp)
             results.macTables.push({
               file: macFile,
               ip: deviceIp,
               stats: result.stats
             })
-            
+
           } catch (error) {
             console.error(`Error importing MAC table ${macFile}:`, error.message)
             results.errors.push(`MAC table ${macFile}: ${error.message}`)
           }
         }
       }
-      
+
       console.log(`Import completed: ${results.devices.length} devices, ${results.macTables.length} MAC tables, ${results.errors.length} errors`)
-      
+
     } catch (error) {
       console.error('Directory import error:', error)
       results.errors.push(`Directory import error: ${error.message}`)
     }
-    
+
     return results
   }
 }

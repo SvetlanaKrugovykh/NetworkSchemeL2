@@ -149,12 +149,12 @@ class MacTableParser {
 
     for (const line of lines) {
       // Skip headers and control lines
-      if (line.includes('disp mac-add') || 
-          line.includes('MAC Address') || 
-          line.includes('VLAN/VSI') ||
-          line.includes('-------') ||
-          line.includes('Total items displayed') ||
-          line.length === 0) {
+      if (line.includes('disp mac-add') ||
+        line.includes('MAC Address') ||
+        line.includes('VLAN/VSI') ||
+        line.includes('-------') ||
+        line.includes('Total items displayed') ||
+        line.length === 0) {
         if (line.includes('-------')) {
           parsingTable = true
         }
@@ -206,9 +206,9 @@ class MacTableParser {
 
     // Check for Huawei format indicators
     const hasHuaweiKeywords = content.includes('disp mac-add') ||
-                            content.includes('VLAN/VSI') ||
-                            content.includes('Learned-From') ||
-                            /\b\d{4}-\d{4}-\d{4}\b/.test(content) // MAC format like 1234-5678-abcd
+      content.includes('VLAN/VSI') ||
+      content.includes('Learned-From') ||
+      /\b\d{4}-\d{4}-\d{4}\b/.test(content) // MAC format like 1234-5678-abcd
 
     if (hasHuaweiKeywords) {
       console.log('Detected Huawei MAC table format')
