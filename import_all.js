@@ -19,7 +19,7 @@ async function importAllMacFiles() {
       const filePath = path.join(macsDir, file)
       const macTableText = fs.readFileSync(filePath, 'utf8')
       
-      // Extract IP from filename (192_168_156_10.mac -> 192.168.156.10)
+      // Extract IP from filename (192_168_1_10.mac -> 192.168.1.10)
       const deviceIp = file.replace(/\.mac$/, '').replace(/_/g, '.')
       
       const result = await ImportService.importMacTable(macTableText, deviceIp)

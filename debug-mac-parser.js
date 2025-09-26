@@ -19,7 +19,7 @@ async function testMacParsing() {
     console.log('- Contains "Mac Address Table (Total":', content.includes('Mac Address Table (Total'))
 
     const deviceInfo = {
-      ip_address: '192.168.156.110',
+      ip_address: '192.168.1.10',
       hostname: 'test-device'
     }
 

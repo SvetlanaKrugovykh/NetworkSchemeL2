@@ -308,18 +308,7 @@ class ImportService {
         dp.port_name,
         dp.port_type,
         dp.description,
-        COALESCE(
-          (SELECT json_agg(
-            json_build_object(
-              'vlan_id', dv.vlan_id,
-              'mode', dv.mode,
-              'native_vlan', dv.native_vlan
-            )
-          )
-          FROM device_vlans dv 
-          WHERE dv.port_id = dp.id),
-          '[]'::json
-        ) as vlans
+        '[]'::json as vlans
       FROM device_ports dp
       WHERE dp.device_id = $1
     `, [deviceId])

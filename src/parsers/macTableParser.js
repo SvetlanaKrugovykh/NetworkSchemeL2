@@ -137,10 +137,83 @@ class MacTableParser {
   }
 
   /**
+   * Parse Huawei MAC address table format
+   * Format: MAC Address    VLAN/VSI    Learned-From    Type
+   * Example: 1234-5678-abcd 65/-        GE0/0/2         dynamic
+   */
+  static parseHuaweiMacTable(content, deviceInfo = null) {
+    const lines = content.split('\n').map(line => line.trim())
+    const macEntries = []
+
+    let parsingTable = false
+
+    for (const line of lines) {
+      // Skip headers and control lines
+      if (line.includes('disp mac-add') || 
+          line.includes('MAC Address') || 
+          line.includes('VLAN/VSI') ||
+          line.includes('-------') ||
+          line.includes('Total items displayed') ||
+          line.length === 0) {
+        if (line.includes('-------')) {
+          parsingTable = true
+        }
+        continue
+      }
+
+      if (!parsingTable) {
+        continue
+      }
+
+      // Parse MAC table entry
+      // Format: MAC_ADDRESS VLAN/VSI LEARNED_FROM TYPE
+      const parts = line.split(/\s+/)
+
+      if (parts.length >= 4) {
+        const macAddress = this.normalizeMacAddress(parts[0]) // Convert 1234-5678-abcd to 12:34:56:78:ab:cd
+        const vlanPart = parts[1] // Format: 65/- or just number
+        const port = parts[2] // GE0/0/2, Eth0/0/1, etc.
+        const type = parts[3] // dynamic, security, etc.
+
+        // Extract VLAN ID (take number before slash)
+        const vlanMatch = vlanPart.match(/^(\d+)/)
+        const vlanId = vlanMatch ? parseInt(vlanMatch[1]) : null
+
+        if (macAddress && vlanId && port) {
+          macEntries.push({
+            mac_address: macAddress,
+            vlan_id: vlanId,
+            port: port,
+            type: type || 'dynamic',
+            device_ip: deviceInfo?.ip || null,
+            device_hostname: deviceInfo?.hostname || null,
+            source_type: 'huawei_mac_table',
+            is_source: null,
+            hop_count: null
+          })
+        }
+      }
+    }
+
+    return macEntries
+  }
+
+  /**
    * Auto-detect MAC table format and parse accordingly
    */
   static parseGenericMacTable(content, deviceInfo = null) {
     const lines = content.split('\n')
+
+    // Check for Huawei format indicators
+    const hasHuaweiKeywords = content.includes('disp mac-add') ||
+                            content.includes('VLAN/VSI') ||
+                            content.includes('Learned-From') ||
+                            /\b\d{4}-\d{4}-\d{4}\b/.test(content) // MAC format like 1234-5678-abcd
+
+    if (hasHuaweiKeywords) {
+      console.log('Detected Huawei MAC table format')
+      return this.parseHuaweiMacTable(content, deviceInfo)
+    }
 
     // Check for Cisco/OLT format indicators (with total count and specific headers)
     if (content.includes('Mac Address Table (Total') ||

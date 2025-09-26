@@ -5,7 +5,7 @@ const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 7111;
 const BASE_URL = `http://${HOST}:${PORT}`;
 
-const testMac = '00:22:6b:88:fe:0b';
+const testMac = '11:22:33:44:55:66';
 const normalizedMac = testMac.replace(/[:-]/g, '').toLowerCase();
 
 console.log('🔍 Тестируем поиск MAC адреса:');

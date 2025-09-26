@@ -36,17 +36,14 @@ class TopologyAnalyzer {
         d.hostname as device_hostname,
         dp.port_number,
         dp.port_type,
-        dv.mode as port_mode,
-        dv.native_vlan,
+        NULL as port_mode,
+        NULL as native_vlan,
         (SELECT COUNT(*) FROM mac_addresses ma2 
          WHERE ma2.device_id = ma.device_id AND ma2.port_id = ma.port_id 
          AND ma2.vlan_id = ma.vlan_id) as port_mac_count
       FROM mac_addresses ma
       JOIN devices d ON ma.device_id = d.id
       LEFT JOIN device_ports dp ON ma.port_id = dp.id
-      LEFT JOIN device_vlans dv ON (dv.device_id = ma.device_id 
-                                   AND dv.port_id = ma.port_id 
-                                   AND dv.vlan_id = ma.vlan_id)
       WHERE ma.mac_address = $1 AND ma.vlan_id = $2
       ORDER BY port_mac_count ASC, d.ip_address
     `
@@ -182,9 +179,6 @@ class TopologyAnalyzer {
         dp.port_number,
         dp.port_name,
         dp.description as port_description,
-        dv.mode,
-        dv.native_vlan,
-        dv.qinq_enabled,
         v.name as vlan_name,
         v.description as vlan_description,
         COALESCE(
@@ -205,19 +199,20 @@ class TopologyAnalyzer {
             AND ma.vlan_id = $1),
           '[]'::json
         ) as mac_addresses
-      FROM device_vlans dv
-      JOIN devices d ON dv.device_id = d.id
-      JOIN device_ports dp ON dv.port_id = dp.id
-      JOIN vlans v ON dv.vlan_id = v.vlan_id
-      WHERE dv.vlan_id = $1
+      FROM mac_addresses ma
+      JOIN devices d ON ma.device_id = d.id
+      JOIN device_ports dp ON ma.port_id = dp.id
+      JOIN vlans v ON ma.vlan_id = v.vlan_id
+      WHERE ma.vlan_id = $1
+      GROUP BY d.id, d.hostname, d.ip_address, d.device_type, dp.id, dp.port_number, dp.port_name, dp.description, v.name, v.description
       ORDER BY d.ip_address, dp.port_number
     `
-    
+
     const result = await pool.query(query, [vlanId])
-    
+
     // Group by devices
     const deviceMap = {}
-    
+
     result.rows.forEach(row => {
       if (!deviceMap[row.device_id]) {
         deviceMap[row.device_id] = {
@@ -228,15 +223,12 @@ class TopologyAnalyzer {
           ports: []
         }
       }
-      
+
       deviceMap[row.device_id].ports.push({
         port_id: row.port_id,
         port_number: row.port_number,
         port_name: row.port_name,
         port_description: row.port_description,
-        mode: row.mode,
-        native_vlan: row.native_vlan,
-        qinq_enabled: row.qinq_enabled,
         mac_addresses: row.mac_addresses || []
       })
     })
