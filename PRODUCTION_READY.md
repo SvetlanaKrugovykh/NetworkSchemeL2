@@ -6,7 +6,7 @@
 - Добавлен парсер `parseHuaweiMacTable` с поддержкой формата `1234-5678-abcd 65/- GE0/0/2 dynamic`
 - Автоопределение по ключевым словам: `disp mac-add`, `VLAN/VSI`, `Learned-From`
 - Конвертация MAC из дефисного формата в стандартный формат с двоеточиями
-- Извлечение VLAN ID из формата `65/-` 
+- Извлечение VLAN ID из формата `65/-`
 
 ### ✅ Безопасность данных
 - Удалены все реальные IP и MAC адреса из кода и комментариев
@@ -33,7 +33,7 @@
 
 ## Файлы готовы к деплою:
 - server.js ✓
-- index.js ✓  
+- index.js ✓
 - src/parsers/macTableParser.js ✓
 - src/services/importService.js ✓
 - src/services/topologyAnalyzer.js ✓
