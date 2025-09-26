@@ -36,10 +36,27 @@ class VlanModel {
   }
 
   /**
-   * Get all VLANs
+   * Get all VLANs with MAC address count
    */
   static async findAll() {
-    const query = 'SELECT * FROM vlans ORDER BY vlan_id'
+    const query = `
+      SELECT 
+        v.*,
+        COALESCE(mac_stats.mac_count, 0) as mac_count,
+        COALESCE(device_stats.device_count, 0) as device_count
+      FROM vlans v
+      LEFT JOIN (
+        SELECT vlan_id, COUNT(DISTINCT mac_address) as mac_count
+        FROM mac_addresses 
+        GROUP BY vlan_id
+      ) mac_stats ON v.vlan_id = mac_stats.vlan_id
+      LEFT JOIN (
+        SELECT vlan_id, COUNT(DISTINCT device_id) as device_count
+        FROM device_vlans 
+        GROUP BY vlan_id
+      ) device_stats ON v.vlan_id = device_stats.vlan_id
+      ORDER BY v.vlan_id
+    `
     const result = await pool.query(query)
     return result.rows
   }
@@ -98,7 +115,7 @@ class VlanModel {
         null as inner_vlan_id,
         v.name as vlan_name,
         v.description as vlan_description,
-        COUNT(ma.mac_address) as mac_count
+        COUNT(DISTINCT ma.mac_address) as mac_count
       FROM mac_addresses ma
       JOIN devices d ON ma.device_id = d.id
       JOIN device_ports dp ON ma.port_id = dp.id

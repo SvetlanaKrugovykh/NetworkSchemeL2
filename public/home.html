@@ -440,7 +440,9 @@
 
         if (topology.success && macs.success) {
           const deviceCount = topology.data.devices?.length || 0;
-          const macCount = macs.data?.length || 0;
+          // Count unique MAC addresses instead of total records
+          const uniqueMacs = new Set(macs.data?.map(mac => mac.mac_address) || []);
+          const macCount = uniqueMacs.size;
 
           let html = `
             <div class="log">

@@ -465,7 +465,7 @@ class NetworkController {
         SELECT
           dp.id,
           dp.port_name,
-          COUNT(ma.id) as mac_count
+          COUNT(DISTINCT ma.mac_address) as mac_count
         FROM device_ports dp
         LEFT JOIN mac_addresses ma ON dp.id = ma.port_id
         WHERE dp.device_id = $1
@@ -497,7 +497,7 @@ class NetworkController {
         SELECT
           v.vlan_id,
           v.name,
-          COUNT(ma.id) as mac_count
+          COUNT(DISTINCT ma.mac_address) as mac_count
         FROM vlans v
         JOIN mac_addresses ma ON v.vlan_id = ma.vlan_id
         WHERE ma.device_id = $1
@@ -524,9 +524,9 @@ class NetworkController {
     try {
       const pool = require('../db/pool')
 
-      // Get MAC count by VLAN
+      // Get MAC count by VLAN (unique MAC addresses)
       const vlanStats = await pool.query(`
-        SELECT vlan_id, COUNT(*) as mac_count
+        SELECT vlan_id, COUNT(DISTINCT mac_address) as mac_count
         FROM mac_addresses
         GROUP BY vlan_id
         ORDER BY vlan_id
