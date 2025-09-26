@@ -254,11 +254,11 @@ class NetworkController {
         }
         .mac-item {
             background: #e8f5e8;
-            padding: 5px 10px;
-            margin: 2px 0;
-            border-radius: 3px;
+            padding: 8px 12px;
+            margin: 3px 0;
+            border-radius: 4px;
             font-family: monospace;
-            font-size: 0.9em;
+            font-size: 1.1em;
             border-left: 3px solid #4caf50;
         }
         .stats {

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Scheme L2 - VLAN список</title>
+    <title>Network Scheme L2 - Список VLAN</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #7c3aed, #6366f1);
+            background: linear-gradient(135deg, #0f172a, #334155);
             color: white;
             padding: 30px;
             text-align: center;
@@ -60,11 +60,11 @@
         }
         
         .nav-btn.active {
-            background: #7c3aed;
+            background: #334155;
         }
         
         .nav-btn:hover {
-            background: #6366f1;
+            background: #0f172a;
             transform: translateY(-2px);
         }
         
@@ -109,7 +109,7 @@
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
-            color: #7c3aed;
+            color: #334155;
             margin-bottom: 5px;
         }
         
@@ -139,7 +139,7 @@
         }
         
         .vlan-header {
-            background: linear-gradient(135deg, #7c3aed, #6366f1);
+            background: linear-gradient(135deg, #334155, #0f172a);
             color: white;
             padding: 20px;
         }
@@ -220,48 +220,48 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔗 VLAN список</h1>
-            <p>Обзор и управление виртуальными локальными сетями</p>
+            <h1>🔗 Список VLAN</h1>
+            <p>Огляд та управління віртуальними локальними мережами</p>
         </div>
         
         <nav class="nav">
             <div class="nav-buttons">
-                <a href="home.html" class="nav-btn">🏠 Главная</a>
-                <a href="import.html" class="nav-btn">📁 Импорт данных</a>
-                <a href="#" class="nav-btn active">🔗 VLAN список</a>
-                <a href="devices.html" class="nav-btn">🖥️ Устройства</a>
+                <a href="home.html" class="nav-btn">🏠 Головна</a>
+                <a href="import.html" class="nav-btn">📁 Імпорт даних</a>
+                <a href="#" class="nav-btn active">🔗 Список VLAN</a>
+                <a href="devices.html" class="nav-btn">🖥️ Пристрої</a>
             </div>
         </nav>
         
         <div class="content">
             <!-- Поиск -->
             <div class="search-card">
-                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по VLAN ID или названию...">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Пошук за VLAN ID або назвою...">
             </div>
             
             <!-- Статистика -->
             <div class="stats" id="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="totalVlans">-</div>
-                    <div class="stat-label">Всего VLAN</div>
+                    <div class="stat-label">Всього VLAN</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="totalMacs">-</div>
-                    <div class="stat-label">MAC адресов</div>
+                    <div class="stat-label">MAC адрес</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="totalDevices">-</div>
-                    <div class="stat-label">Устройств</div>
+                    <div class="stat-label">Пристроїв</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="avgMacsPerVlan">-</div>
-                    <div class="stat-label">Среднее MAC/VLAN</div>
+                    <div class="stat-label">Середнє MAC/VLAN</div>
                 </div>
             </div>
             
             <!-- VLAN карточки -->
             <div class="vlan-grid" id="vlanGrid">
-                <div class="loading">⏳ Загрузка VLAN данных...</div>
+                <div class="loading">⏳ Завантаження даних VLAN...</div>
             </div>
         </div>
     </div>
@@ -280,11 +280,11 @@
                     updateStats(allVlans);
                 } else {
                     document.getElementById('vlanGrid').innerHTML = 
-                        '<div class="empty">❌ Ошибка загрузки VLAN: ' + result.message + '</div>';
+                        '<div class="empty">❌ Помилка завантаження VLAN: ' + result.message + '</div>';
                 }
             } catch (error) {
                 document.getElementById('vlanGrid').innerHTML = 
-                    '<div class="empty">❌ Ошибка: ' + error.message + '</div>';
+                    '<div class="empty">❌ Помилка: ' + error.message + '</div>';
             }
         }
         
@@ -400,10 +400,10 @@
                         </html>
                     `);
                 } else {
-                    alert('Ошибка загрузки топологии: ' + (result.message || 'Данные не найдены'));
+                    alert('Помилка завантаження топології: ' + (result.message || 'Дані не знайдено'));
                 }
             } catch (error) {
-                alert('Ошибка: ' + error.message);
+                alert('Помилка: ' + error.message);
             }
         }
         
@@ -412,11 +412,11 @@
                 // Открываем схему в новой вкладке
                 window.open(`/api/vlans/${vlanId}/scheme`, '_blank');
             } catch (error) {
-                alert('Ошибка: ' + error.message);
+                alert('Помилка: ' + error.message);
             }
         }
         
-        // Поиск в реальном времени
+        // Пошук у реальному часі
         document.getElementById('searchInput').addEventListener('input', filterVlans);
         
         // Загружаем данные при загрузке страницы

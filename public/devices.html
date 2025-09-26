@@ -1,370 +1,373 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Scheme L2 - Пристрої</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #0f172a, #334155);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .nav {
-            background: #f8fafc;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .nav-btn {
-            background: #6b7280;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-btn.active {
-            background: #334155;
-        }
-        
-        .nav-btn:hover {
-            background: #0f172a;
-            transform: translateY(-2px);
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .search-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #334155;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-        
-        .device-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        
-        .device-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .device-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .device-header {
-            background: linear-gradient(135deg, #334155, #0f172a);
-            color: white;
-            padding: 20px;
-        }
-        
-        .device-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .device-ip {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .device-body {
-            padding: 20px;
-        }
-        
-        .device-stat {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 5px 0;
-        }
-        
-        .device-stat:not(:last-child) {
-            border-bottom: 1px solid #f1f5f9;
-        }
-        
-        .stat-value {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .ports-section {
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-top: 1px solid #e2e8f0;
-        }
-        
-        .ports-title {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 10px;
-        }
-        
-        .port-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .port-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .port-name {
-            font-weight: 500;
-            color: #4b5563;
-        }
-        
-        .port-macs {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
-        
-        .device-actions {
-            padding: 15px 20px;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn:hover {
-            background: #059669;
-        }
-        
-        .btn.secondary {
-            background: #64748b;
-        }
-        
-        .btn.secondary:hover {
-            background: #475569;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-        
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Scheme L2 - Пристрої</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0f172a, #334155);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .nav {
+      background: #f8fafc;
+      padding: 20px 30px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn.active {
+      background: #334155;
+    }
+
+    .nav-btn:hover {
+      background: #0f172a;
+      transform: translateY(-2px);
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .search-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #334155;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .device-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .device-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .device-header {
+      background: linear-gradient(135deg, #334155, #0f172a);
+      color: white;
+      padding: 20px;
+    }
+
+    .device-name {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .device-ip {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .device-body {
+      padding: 20px;
+    }
+
+    .device-stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 5px 0;
+    }
+
+    .device-stat:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .ports-section {
+      background: #f8fafc;
+      padding: 15px 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .ports-title {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+
+    .port-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .port-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .port-name {
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    .port-macs {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .device-actions {
+      padding: 15px 20px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background: #059669;
+    }
+
+    .btn.secondary {
+      background: #64748b;
+    }
+
+    .btn.secondary:hover {
+      background: #475569;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🖥️ Пристрої</h1>
-            <p>Управління мережевими пристроями та їх портами</p>
-        </div>
-        
-        <nav class="nav">
-            <div class="nav-buttons">
-                <a href="home.html" class="nav-btn">🏠 Головна</a>
-                <a href="import.html" class="nav-btn">📁 Імпорт даних</a>
-                <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
-                <a href="#" class="nav-btn active">🖥️ Пристрої</a>
-            </div>
-        </nav>
-        
-        <div class="content">
-            <!-- Поиск -->
-            <div class="search-card">
-                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Пошук за назвою пристрою або IP адресою...">
-            </div>
-            
-            <!-- Статистика -->
-            <div class="stats" id="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalDevices">-</div>
-                    <div class="stat-label">Всього пристроїв</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalPorts">-</div>
-                    <div class="stat-label">Всього портів</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalVlans">-</div>
-                    <div class="stat-label">VLAN</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="avgPortsPerDevice">-</div>
-                    <div class="stat-label">Середнє портів/пристрій</div>
-                </div>
-            </div>
-            
-            <!-- Пристрої -->
-            <div class="device-grid" id="deviceGrid">
-                <div class="loading">⏳ Завантаження даних про пристрої...</div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>🖥️ Пристрої</h1>
+      <p>Управління мережевими пристроями та їх портами</p>
     </div>
 
-    <script>
-        let allDevices = [];
-        
-        async function loadDevices() {
-            try {
-                const response = await fetch('/api/devices');
-                const result = await response.json();
-                
-                if (result.success) {
-                    allDevices = result.data;
-                    await loadDevicePorts();
-                    displayDevices(allDevices);
-                    updateStats(allDevices);
-                } else {
-                    document.getElementById('deviceGrid').innerHTML = 
-                        '<div class="empty">❌ Помилка завантаження пристроїв: ' + result.message + '</div>';
-                }
-            } catch (error) {
-                document.getElementById('deviceGrid').innerHTML = 
-                    '<div class="empty">❌ Помилка: ' + error.message + '</div>';
-            }
+    <nav class="nav">
+      <div class="nav-buttons">
+        <a href="home.html" class="nav-btn">🏠 Головна</a>
+        <a href="import.html" class="nav-btn">📁 Імпорт даних</a>
+        <a href="vlans.html" class="nav-btn">🔗 VLAN список</a>
+        <a href="#" class="nav-btn active">🖥️ Пристрої</a>
+      </div>
+    </nav>
+
+    <div class="content">
+      <!-- Поиск -->
+      <div class="search-card">
+        <input type="text" class="search-input" id="searchInput"
+          placeholder="🔍 Пошук за назвою пристрою або IP адресою...">
+      </div>
+
+      <!-- Статистика -->
+      <div class="stats" id="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalDevices">-</div>
+          <div class="stat-label">Всього пристроїв</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalPorts">-</div>
+          <div class="stat-label">Всього портів</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalVlans">-</div>
+          <div class="stat-label">VLAN</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avgPortsPerDevice">-</div>
+          <div class="stat-label">Середнє портів/пристрій</div>
+        </div>
+      </div>
+
+      <!-- Пристрої -->
+      <div class="device-grid" id="deviceGrid">
+        <div class="loading">⏳ Завантаження даних про пристрої...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allDevices = [];
+
+    async function loadDevices() {
+      try {
+        const response = await fetch('/api/devices');
+        const result = await response.json();
+
+        if (result.success) {
+          allDevices = result.data;
+          await loadDevicePorts();
+          displayDevices(allDevices);
+          updateStats(allDevices);
+        } else {
+          document.getElementById('deviceGrid').innerHTML =
+            '<div class="empty">❌ Помилка завантаження пристроїв: ' + result.message + '</div>';
         }
-        
-        async function loadDevicePorts() {
-            for (const device of allDevices) {
-                try {
-                    const response = await fetch(`/api/devices/${device.id}/ports`);
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        device.ports = result.data;
-                    } else {
-                        device.ports = [];
-                    }
-                } catch (error) {
-                    device.ports = [];
-                }
-            }
+      } catch (error) {
+        document.getElementById('deviceGrid').innerHTML =
+          '<div class="empty">❌ Помилка: ' + error.message + '</div>';
+      }
+    }
+
+    async function loadDevicePorts() {
+      for (const device of allDevices) {
+        try {
+          const response = await fetch(`/api/devices/${device.id}/ports`);
+          const result = await response.json();
+
+          if (result.success) {
+            device.ports = result.data;
+          } else {
+            device.ports = [];
+          }
+        } catch (error) {
+          device.ports = [];
         }
-        
-        function displayDevices(devices) {
-            const grid = document.getElementById('deviceGrid');
-            
-            if (devices.length === 0) {
-                grid.innerHTML = '<div class="empty">📭 Пристрої не знайдені</div>';
-                return;
-            }
-            
-            const deviceCards = devices.map(device => {
-                const portsHtml = device.ports && device.ports.length > 0 ? 
-                    device.ports.map(port => `
+      }
+    }
+
+    function displayDevices(devices) {
+      const grid = document.getElementById('deviceGrid');
+
+      if (devices.length === 0) {
+        grid.innerHTML = '<div class="empty">📭 Пристрої не знайдені</div>';
+        return;
+      }
+
+      const deviceCards = devices.map(device => {
+        const portsHtml = device.ports && device.ports.length > 0 ?
+          device.ports.map(port => `
                         <div class="port-item">
                             <span class="port-name">${port.port_name}</span>
                             <span class="port-macs">${port.mac_count || 0} MAC</span>
                         </div>
-                    `).join('') : 
-                    '<div class="port-item"><span style="color: #9ca3af;">Порти не знайдені</span></div>';
-                
-                return `
+                    `).join('') :
+          '<div class="port-item"><span style="color: #9ca3af;">Порти не знайдені</span></div>';
+
+        return `
                     <div class="device-card">
                         <div class="device-header">
                             <div class="device-name">${device.hostname || device.name || 'Невідомий пристрій'}</div>
@@ -400,98 +403,98 @@
                         </div>
                     </div>
                 `;
-            }).join('');
-            
-            grid.innerHTML = deviceCards;
+      }).join('');
+
+      grid.innerHTML = deviceCards;
+    }
+
+    async function updateStats(devices) {
+      const totalDevices = devices.length;
+      const totalPorts = devices.reduce((sum, device) => sum + (device.ports ? device.ports.length : 0), 0);
+      const avgPorts = totalDevices > 0 ? Math.round(totalPorts / totalDevices) : 0;
+
+      // Получаем количество VLAN
+      let totalVlans = 0;
+      try {
+        const response = await fetch('/api/vlans');
+        const result = await response.json();
+        if (result.success) {
+          totalVlans = result.data.length;
         }
-        
-        async function updateStats(devices) {
-            const totalDevices = devices.length;
-            const totalPorts = devices.reduce((sum, device) => sum + (device.ports ? device.ports.length : 0), 0);
-            const avgPorts = totalDevices > 0 ? Math.round(totalPorts / totalDevices) : 0;
-            
-            // Получаем количество VLAN
-            let totalVlans = 0;
-            try {
-                const response = await fetch('/api/vlans');
-                const result = await response.json();
-                if (result.success) {
-                    totalVlans = result.data.length;
-                }
-            } catch (error) {
-                console.error('Error loading VLANs:', error);
-            }
-            
-            document.getElementById('totalDevices').textContent = totalDevices;
-            document.getElementById('totalPorts').textContent = totalPorts;
-            document.getElementById('totalVlans').textContent = totalVlans;
-            document.getElementById('avgPortsPerDevice').textContent = avgPorts;
-        }
-        
-        function filterDevices() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (!searchTerm) {
-                displayDevices(allDevices);
-                return;
-            }
-            
-            const filtered = allDevices.filter(device => 
-                (device.hostname && device.hostname.toLowerCase().includes(searchTerm)) ||
-                (device.name && device.name.toLowerCase().includes(searchTerm)) ||
-                (device.ip_address && device.ip_address.toLowerCase().includes(searchTerm)) ||
-                (device.ip && device.ip.toLowerCase().includes(searchTerm)) ||
-                (device.device_type && device.device_type.toLowerCase().includes(searchTerm))
-            );
-            
-            displayDevices(filtered);
-        }
-        
-        async function showDeviceDetails(deviceId) {
-            const device = allDevices.find(d => d.id === deviceId);
-            if (!device) return;
-            
-            const detailsWindow = window.open('', '_blank');
-            const portsHtml = device.ports && device.ports.length > 0 ?
-                device.ports.map(port => `
+      } catch (error) {
+        console.error('Error loading VLANs:', error);
+      }
+
+      document.getElementById('totalDevices').textContent = totalDevices;
+      document.getElementById('totalPorts').textContent = totalPorts;
+      document.getElementById('totalVlans').textContent = totalVlans;
+      document.getElementById('avgPortsPerDevice').textContent = avgPorts;
+    }
+
+    function filterDevices() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+      if (!searchTerm) {
+        displayDevices(allDevices);
+        return;
+      }
+
+      const filtered = allDevices.filter(device =>
+        (device.hostname && device.hostname.toLowerCase().includes(searchTerm)) ||
+        (device.name && device.name.toLowerCase().includes(searchTerm)) ||
+        (device.ip_address && device.ip_address.toLowerCase().includes(searchTerm)) ||
+        (device.ip && device.ip.toLowerCase().includes(searchTerm)) ||
+        (device.device_type && device.device_type.toLowerCase().includes(searchTerm))
+      );
+
+      displayDevices(filtered);
+    }
+
+    async function showDeviceDetails(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) return;
+
+      const detailsWindow = window.open('', '_blank');
+      const portsHtml = device.ports && device.ports.length > 0 ?
+        device.ports.map(port => `
                     <div class="port">
                         <div class="port-name">${port.port_name}</div>
                         <div class="port-stats">MAC адрес: ${port.mac_count || 0}</div>
                     </div>
                 `).join('') :
-                '<p style="color: #9ca3af;">Порти не знайдені</p>';
-            
-            detailsWindow.document.write(`
+        '<p style="color: #9ca3af;">Порти не знайдені</p>';
+
+      detailsWindow.document.write(`
                 <html lang="ru">
                     <head>
                         <title>Пристрій ${device.hostname || device.name || 'Невідомий'}</title>
                         <style>
-                            body { 
-                                font-family: Arial, sans-serif; 
-                                padding: 20px; 
+                            body {
+                                font-family: Arial, sans-serif;
+                                padding: 20px;
                                 background: #f8fafc;
                             }
-                            .device-info { 
+                            .device-info {
                                 background: white;
-                                padding: 20px; 
+                                padding: 20px;
                                 border-radius: 8px;
                                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                                 margin-bottom: 20px;
                             }
-                            .port { 
+                            .port {
                                 background: white;
-                                margin: 10px 0; 
-                                padding: 15px; 
-                                border: 1px solid #e2e8f0; 
-                                border-radius: 6px; 
+                                margin: 10px 0;
+                                padding: 15px;
+                                border: 1px solid #e2e8f0;
+                                border-radius: 6px;
                             }
-                            .port-name { 
-                                font-weight: bold; 
-                                color: #1e293b; 
+                            .port-name {
+                                font-weight: bold;
+                                color: #1e293b;
                                 margin-bottom: 5px;
                             }
-                            .port-stats { 
-                                color: #64748b; 
+                            .port-stats {
+                                color: #64748b;
                                 font-size: 0.9rem;
                             }
                         </style>
@@ -508,27 +511,27 @@
                     </body>
                 </html>
             `);
-        }
-        
-        async function showDeviceVlans(deviceId) {
-            try {
-                const response = await fetch(`/api/devices/${deviceId}/vlans`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const device = allDevices.find(d => d.id === deviceId);
-                    const vlanWindow = window.open('', '_blank');
-                    
-                    const vlansHtml = result.data.length > 0 ?
-                        result.data.map(vlan => `
+    }
+
+    async function showDeviceVlans(deviceId) {
+      try {
+        const response = await fetch(`/api/devices/${deviceId}/vlans`);
+        const result = await response.json();
+
+        if (result.success) {
+          const device = allDevices.find(d => d.id === deviceId);
+          const vlanWindow = window.open('', '_blank');
+
+          const vlansHtml = result.data.length > 0 ?
+            result.data.map(vlan => `
                             <div class="vlan">
                                 <div class="vlan-id">VLAN ${vlan.vlan_id}</div>
                                 <div class="vlan-stats">MAC адрес: ${vlan.mac_count || 0}</div>
                             </div>
                         `).join('') :
-                        '<p style="color: #9ca3af;">VLAN не найдены</p>';
-                    
-                    vlanWindow.document.write(`
+            '<p style="color: #9ca3af;">VLAN не найдены</p>';
+
+          vlanWindow.document.write(`
                         <html lang="ru">
                             <head>
                                 <title>VLAN пристрою ${device ? (device.hostname || device.name) : deviceId}</title>
@@ -545,19 +548,20 @@
                             </body>
                         </html>
                     `);
-                } else {
-                    alert('Ошибка загрузки VLAN: ' + result.message);
-                }
-            } catch (error) {
-                alert('Ошибка: ' + error.message);
-            }
+        } else {
+          alert('Ошибка загрузки VLAN: ' + result.message);
         }
-        
-        // Поиск в реальном времени
-        document.getElementById('searchInput').addEventListener('input', filterDevices);
-        
-        // Загружаем данные при загрузке страницы
-        document.addEventListener('DOMContentLoaded', loadDevices);
-    </script>
+      } catch (error) {
+        alert('Ошибка: ' + error.message);
+      }
+    }
+
+    // Поиск в реальном времени
+    document.getElementById('searchInput').addEventListener('input', filterDevices);
+
+    // Загружаем данные при загрузке страницы
+    document.addEventListener('DOMContentLoaded', loadDevices);
+  </script>
 </body>
+
 </html>
