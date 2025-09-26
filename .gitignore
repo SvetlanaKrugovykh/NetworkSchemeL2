@@ -10,4 +10,5 @@ temp
 daemon
 logs
 *.log
+netscheme.log
 
